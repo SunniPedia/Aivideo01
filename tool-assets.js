@@ -1,0 +1,1 @@
+const fs=require("fs");module.exports={logo:fs.existsSync("logo.png")?"logo.png":null,badge:fs.existsSync("google-play-badge.png")?"google-play-badge.png":null,audio:fs.existsSync("audio.mp3")?"audio.mp3":null};

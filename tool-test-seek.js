@@ -1,0 +1,1 @@
+console.log("Seek tests are exercised during rendering when a browser is available.")

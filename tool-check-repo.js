@@ -1,0 +1,1 @@
+const fs=require('fs');const cp=require('child_process');for(const f of fs.readdirSync('.')){if(f.endsWith('.json'))JSON.parse(fs.readFileSync(f,'utf8'));if(f.endsWith('.js'))cp.execFileSync(process.execPath,['--check',f]);}console.log('Basic JS and JSON checks passed.');

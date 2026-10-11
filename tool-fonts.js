@@ -1,0 +1,1 @@
+module.exports=async page=>{await page.evaluate(async()=>{await document.fonts.ready;try{await document.fonts.load("24px SolaimanLipi")}catch(e){} });console.log("Font check complete; upload SolaimanLipi TTF for best Bengali rendering.")};

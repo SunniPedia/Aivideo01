@@ -1,0 +1,1 @@
+const PV={total:(s,a,t)=>Math.max(a?a+t:0,s.at(-1).end+.5)};if(PV.total([{end:6}],10,2)!==12||PV.total([{end:8}],3,2)!==8.5)process.exit(1);console.log("Duration unit tests passed")

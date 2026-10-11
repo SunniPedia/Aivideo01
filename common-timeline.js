@@ -1,0 +1,1 @@
+window.PV=window.PV||{};PV.total=(scenes,audio,tail)=>Math.max(audio?audio+tail:0,(scenes.at(-1)?.end||0)+.5);

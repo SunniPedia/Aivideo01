@@ -1,0 +1,13 @@
+{
+  "name": "islami-world-encyclopedia-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministic promo video renderer",
+  "scripts": {
+    "render": "node render.js",
+    "check": "node tool-check-repo.js"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}

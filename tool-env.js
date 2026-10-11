@@ -1,0 +1,1 @@
+module.exports={theme:process.env.THEME||"podcast",width:Number(process.env.WIDTH||0),fps:Number(process.env.FPS||30),out:process.env.OUT||`video-${process.env.THEME||"podcast"}.mp4`,start:Number(process.env.START||0),end:process.env.END?Number(process.env.END):null,volume:Number(process.env.AUDIO_VOLUME||1),tail:Number(process.env.END_PAD??2)};

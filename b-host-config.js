@@ -1,0 +1,1 @@
+window.PV=window.PV||{};PV.hostConfig={skin:"#b97851",hair:"#171717",shirt:"#167c48"};

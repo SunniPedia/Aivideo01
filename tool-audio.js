@@ -1,0 +1,1 @@
+const {execFileSync}=require('child_process');const fs=require('fs');const A=require('./tool-assets');module.exports={file:A.audio,duration(){if(!A.audio)return 0;return Number(execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',A.audio],{encoding:'utf8'}).trim())}};
