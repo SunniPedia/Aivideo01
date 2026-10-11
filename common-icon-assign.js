@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.assignIcon=(s,i)=>PV.icons[i%PV.icons.length];
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

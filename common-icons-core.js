@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.icons=["crescent","book","diamond","mosque","heart","globe","compass","clock","shield"];
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

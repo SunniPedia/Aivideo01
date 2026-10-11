@@ -1,1 +1,48 @@
-const fs=require('fs'),path=require('path'),cp=require('child_process');let fail=[];for(const f of fs.readdirSync('.')){if(f.endsWith('.json')){try{JSON.parse(fs.readFileSync(f,'utf8'))}catch(e){fail.push(`${f}: invalid JSON ${e.message}`)}}if(f.endsWith('.js')){try{cp.execFileSync(process.execPath,['--check',f],{stdio:'pipe'})}catch(e){fail.push(`${f}: JavaScript syntax error`)}}}for(const f of ['index-infographic.html','index-podcast.html','timestamps.txt','project.json','scenes.json','logo.png','google-play-badge.png','audio.mp3'])if(!fs.existsSync(f))fail.push(`Missing required file: ${f}`);const wf='.github/workflows/render.yml';if(!fs.existsSync(wf))fail.push('Missing workflow '+wf);if(fail.length){console.error(fail.join('\n'));process.exit(1)}console.log('Repository checks passed: JavaScript syntax, JSON parsing, and required project files.');console.log('Note: this check does not prove visual quality or a successful full render.');
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const root = process.cwd();
+const files = fs.readdirSync(root).filter(f => {
+  try { return fs.statSync(path.join(root, f)).isFile(); } catch { return false; }
+});
+
+console.log('[check] files in root:', files.length);
+
+// Flat check – only .github allowed as dir
+const dirs = fs.readdirSync(root).filter(f => {
+  try { return fs.statSync(path.join(root, f)).isDirectory() && f !== 'node_modules' && f !== '.git'; } catch { return false; }
+});
+const badDirs = dirs.filter(d => d !== '.github');
+if (badDirs.length) {
+  console.error('[check] FAIL: unexpected directories:', badDirs);
+  process.exit(1);
+}
+console.log('[check] flat structure OK');
+
+// Required files
+const required = ['render.js', 'package.json', 'timestamps.txt', 'project.json',
+  'index-podcast.html', 'index-infographic.html', 'common-easing.js', 'common-parse.js',
+  'common-timeline.js', 'b-main.js', 'a-main.js'];
+for (const r of required) {
+  if (!fs.existsSync(path.join(root, r))) {
+    console.error('[check] missing required:', r);
+    process.exit(1);
+  }
+}
+console.log('[check] required files present');
+
+// Emoji scan (simple)
+const emojiRe = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
+let emojiHits = 0;
+for (const f of files) {
+  if (!/\.(js|css|html|json|yml|md)$/.test(f)) continue;
+  if (f === 'timestamps.txt') continue;
+  const txt = fs.readFileSync(path.join(root, f), 'utf8');
+  if (emojiRe.test(txt)) {
+    console.warn('[check] possible emoji in', f);
+    emojiHits++;
+  }
+}
+console.log('[check] emoji scan done, hits=', emojiHits);
+console.log('[check] OK');

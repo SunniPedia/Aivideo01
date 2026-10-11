@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.logo=true;
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

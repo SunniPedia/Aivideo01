@@ -2,39 +2,51 @@
   "theme": "both",
   "brandName": "ইসলামী বিশ্বকোষ ও আল হাদিস S2",
   "tagline": null,
-  "language": "Bengali",
+  "language": "bn",
   "direction": "ltr",
-  "digits": "Bengali",
+  "digits": "bn",
   "grouping": "lakh",
   "colors": {
-    "bg": "#041b12",
-    "bg2": "#0b3b29",
-    "accent": "#20a84f",
-    "highlight": "#e9c46a",
-    "cream": "#fff8e6"
+    "primary": "#1a5f2a",
+    "accent": "#c9a227",
+    "highlight": "#e8c547",
+    "background": "#0d1f12",
+    "midBackground": "#14301c",
+    "darkBackground": "#0a160e",
+    "text": "#f5f0e6",
+    "cream": "#f8f4e8",
+    "mood": {
+      "respectful": "#c9a227",
+      "happy": "#e8c547",
+      "informative": "#4a9c6d",
+      "excited": "#f0d060",
+      "calm": "#7ab89a",
+      "enthusiastic": "#ffd700"
+    }
   },
   "fonts": {
     "main": "SolaimanLipi",
-    "latin": "Noto Serif"
+    "latin": "Noto Serif",
+    "files": []
   },
   "logo": {
     "file": "logo.png",
-    "shape": "rounded-square logo with crescent, Kaaba, green dome and minaret",
+    "shape": "rounded-rect with mosque illustration",
     "background": "white"
   },
-  "storeTarget": "Google Play",
+  "storeTarget": "google-play",
   "greetingText": "আসসালামু আলাইকুম",
   "host": {
     "skin": "medium",
-    "hair": "short dark",
+    "hair": "short-dark",
     "cap": "no",
     "beard": "short",
     "glasses": "no",
-    "clothes": "green collared shirt",
-    "stripes": false,
-    "headphones": true,
-    "mic": "black",
+    "clothes": "plain-collared",
+    "stripes": "no",
+    "headphones": "dark",
+    "mic": "dark",
     "faceless": false
   },
-  "endPad": 2
+  "endPad": 2.0
 }

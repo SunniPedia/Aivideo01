@@ -1,60 +1,92 @@
-window.THEME="infographic";
-(function(){
-  const NS='http://www.w3.org/2000/svg';
-  const palette={green:'#20a84f',gold:'#e9c46a',cream:'#fff8e6',deep:'#041b12',mid:'#0b3b29'};
-  const iconPaths={
-    crescent:'<path d="M64 12a39 39 0 1 0 24 70A34 34 0 0 1 64 12Z"/>',
-    book:'<path d="M12 24Q31 14 50 27Q69 14 88 24V78Q69 67 50 81Q31 67 12 78Z"/><path d="M50 27V81"/>',
-    mosque:'<path d="M16 84V48H84V84M10 84H90M28 48Q50 4 72 48M50 10V2M25 48V24M75 48V24M20 24H30M70 24H80"/><path d="M42 84V63Q50 50 58 63V84"/>',
-    compass:'<circle cx="50" cy="50" r="37"/><path d="M62 28 54 54 28 64 39 39Z"/>',
-    clock:'<circle cx="50" cy="50" r="38"/><path d="M50 25V51L69 62"/>',
-    globe:'<circle cx="50" cy="50" r="38"/><path d="M12 50H88M50 12C28 31 28 69 50 88M50 12C72 31 72 69 50 88M19 30H81M19 70H81"/>',
-    heart:'<path d="M50 82 18 51C-2 26 28 8 50 32 72 8 102 26 82 51Z"/>',
-    shield:'<path d="M50 10 82 22V48Q78 72 50 88Q22 72 18 48V22Z"/><path d="M34 49 45 60 67 36"/>',
-    diamond:'<path d="M50 8 88 50 50 92 12 50Z"/><path d="M12 50H88M50 8 35 50 50 92 65 50Z"/>',
-    star8:'<path d="M50 7 59 35 85 15 70 42 96 50 70 58 85 85 59 65 50 93 41 65 15 85 30 58 4 50 30 42 15 15 41 35Z"/>',
-    leaf:'<path d="M18 78Q18 22 82 14Q82 76 28 82Z"/><path d="M24 76 69 32"/>',
-    phone:'<rect x="28" y="8" width="44" height="84" rx="7"/><path d="M40 18H60M44 81H56"/>',
-    play:'<path d="M28 15 82 50 28 85Z"/>',
-    lantern:'<path d="M36 25Q50 6 64 25L70 35 65 78H35L30 35Z"/><path d="M40 35H60M38 70H62M50 25V8"/>',
-    minaret:'<path d="M35 90V37H65V90M29 37H71L63 27H37ZM42 27V15L50 7 58 15V27M28 49H72M28 69H72"/>',
-    document:'<path d="M24 10H60L78 28V90H24Z M60 10V28H78M36 45H66M36 57H66M36 69H61"/>',
-    headphones:'<path d="M17 55V45a33 33 0 0 1 66 0V55M17 52H31V78H22Q17 78 17 72ZM83 52H69V78H78Q83 78 83 72Z"/>',
-    audio:'<path d="M14 43H27L45 27V73L27 57H14Z M58 38Q72 50 58 62M66 27Q88 50 66 73"/>',
-    calendar:'<rect x="14" y="20" width="72" height="66" rx="5"/><path d="M14 39H86M31 10V28M69 10V28M30 52H39M48 52H57M66 52H75M30 67H39M48 67H57"/>',
-    bookstack:'<path d="M18 20H76V36H18ZM24 42H82V58H24ZM14 64H72V80H14Z"/><path d="M28 20V36M34 42V58M24 64V80"/>',
-    target:'<circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="23"/><circle cx="50" cy="50" r="8"/>',
-    check:'<circle cx="50" cy="50" r="38"/><path d="M28 51 43 66 72 34"/>'
-  };
-  function svgIcon(name,size=100){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 100 100');s.setAttribute('width',size);s.setAttribute('height',size);s.classList.add('vector-icon');const g=document.createElementNS(NS,'g');g.innerHTML=iconPaths[name]||iconPaths.diamond;g.setAttribute('fill','none');g.setAttribute('stroke','currentColor');g.setAttribute('stroke-width','4');g.setAttribute('stroke-linecap','round');g.setAttribute('stroke-linejoin','round');s.appendChild(g);return s}
-  function classify(s,i,last){if(i===0&&/আসসালামু|السلام|hello|হ্যালো/i.test(s.text))return'greeting';if(/প্লে স্টোর|ইনস্টল|ডাউনলোড/i.test(s.text))return'store';if(last)return'closing';if(/❝|❞|S2/i.test(s.raw||s.text))return'brand';if(/,| এবং | ও |সহ |আরও রয়েছে/.test(s.text))return'cards';if(/[০-৯0-9]/.test(s.text)||/পঁয়তাল্লিশ|দুই লক্ষ|আটশত|এক হাজার/.test(s.text))return'numbers';return'feature'}
-  function words(text){try{if(Intl.Segmenter)return [...new Intl.Segmenter('bn',{granularity:'word'}).segment(text)].map(x=>x.segment)}catch(e){}return text.split(/(\s+)/).filter(Boolean)}
-  window.init=function(raw,opts={}){
-    const PV=window.PV||{},scenes=(PV.parse?PV.parse(raw):[]);scenes.forEach(s=>s.raw=s.text);window.__scenes=scenes;window.__opts=opts;
-    const audio=Math.max(0,Number(opts.audioDuration)||0),tail=Math.max(0,Number(opts.tailPad??2));const lastEnd=scenes.length?scenes[scenes.length-1].end:0;const total=Math.max(audio?audio+tail:lastEnd+tail,lastEnd+.5);window.__total=total;window.PV=PV;
-    const root=document.getElementById('root');root.innerHTML='';root.className=THEME;
-    const bg=document.createElement('div');bg.className='ambient';root.appendChild(bg);
-    const particles=document.createElement('div');particles.className='particles';root.appendChild(particles);
-    const ornament=document.createElement('div');ornament.className='ornament';ornament.innerHTML='<svg viewBox="0 0 300 50" aria-hidden="true"><path d="M8 25H112M188 25H292"/><path d="M150 3 172 25 150 47 128 25Z M128 25H172"/><circle cx="112" cy="25" r="4"/><circle cx="188" cy="25" r="4"/></svg>';root.appendChild(ornament);
-    const logo=document.createElement('img');logo.id='logo';logo.className='logo-card';logo.src=opts.logo||'logo.png';logo.alt='';root.appendChild(logo);
-    const visual=document.createElement('div');visual.id='visual';visual.className='visual-area';root.appendChild(visual);
-    const caption=document.createElement('section');caption.id='caption';caption.className='caption-panel';caption.setAttribute('aria-live','off');const capOrn=document.createElement('div');capOrn.className='caption-ornament';capOrn.innerHTML='<svg viewBox="0 0 100 20"><path d="M0 10H34M66 10H100"/><path d="M50 1 59 10 50 19 41 10Z"/></svg>';caption.appendChild(capOrn);const capText=document.createElement('div');capText.id='captionText';capText.className='caption-text';caption.appendChild(capText);const eq=document.createElement('div');eq.className='equalizer';for(let i=0;i<(THEME==='infographic'?30:40);i++){let b=document.createElement('i');eq.appendChild(b)}caption.appendChild(eq);root.appendChild(caption);
-    const progress=document.createElement('div');progress.className='progress-track';const bar=document.createElement('span');bar.id='bar';progress.appendChild(bar);root.appendChild(progress);
-    let env=[],envFps=30;window.setAudio=function(e,fps){env=Array.isArray(e)?e:[];envFps=fps||30};
-    function level(t){if(env.length)return t*envFps<env.length?Math.max(0,Math.min(1,env[Math.floor(t*envFps)]||0)):0;return audio?0:Math.max(0,Math.min(1,.36+.16*Math.sin(t*3.1)+.1*Math.sin(t*7.7+1)))}
-    function renderVisual(s,i,t){visual.innerHTML='';visual.dataset.type=s?classify(s,i,i===scenes.length-1):'idle';if(!s)return;let type=visual.dataset.type;
-      if(type==='greeting'){const halo=document.createElement('div');halo.className='greeting-halo';halo.appendChild(svgIcon('crescent',THEME==='infographic'?190:120));visual.appendChild(halo);const title=document.createElement('div');title.className='hero-title';title.textContent=s.text;visual.appendChild(title);const sub=document.createElement('div');sub.className='hero-subtitle';sub.textContent='';visual.appendChild(sub);}
-      else if(type==='store'){const img=document.createElement('img');img.className='store-badge';img.src=opts.badge||'google-play-badge.png';img.alt='Google Play';visual.appendChild(img);const brand=document.createElement('div');brand.className='store-brand';brand.textContent=(opts.project&&opts.project.brandName)||'';visual.appendChild(brand);visual.appendChild(svgIcon('phone',THEME==='infographic'?90:70));}
-      else if(type==='closing'){const row=document.createElement('div');row.className='closing-icons';['book','heart','crescent'].forEach((n,j)=>{const item=document.createElement('div');item.className='closing-icon';item.style.setProperty('--i',j);item.appendChild(svgIcon(n,THEME==='infographic'?130:76));row.appendChild(item)});visual.appendChild(row);const brand=document.createElement('div');brand.className='closing-brand';brand.textContent=(opts.project&&opts.project.brandName)||'';visual.appendChild(brand);}
-      else if(type==='brand'){const ring=document.createElement('div');ring.className='brand-ring';ring.appendChild(svgIcon('crescent',THEME==='infographic'?100:70));visual.appendChild(ring);const img=document.createElement('img');img.className='hero-logo';img.src=opts.logo||'logo.png';img.alt='';visual.appendChild(img);const name=document.createElement('div');name.className='hero-brand';name.textContent=(opts.project&&opts.project.brandName)||s.text;visual.appendChild(name)}
-      else {const items=[];const parts=s.text.split(/،|,|؛|;| এবং | ও | সাথে | আরও রয়েছে /).map(x=>x.trim()).filter(Boolean);if(type==='cards'&&parts.length>1){parts.slice(-Math.min(3,parts.length)).forEach((p,j)=>items.push({label:p,icon:['book','compass','clock'][j]}))}const nums=[...s.text.matchAll(/[০-৯0-9]+|পঁয়তাল্লিশটি|দুই লক্ষ|আটশত|এক হাজার/g)];if(nums.length){const num=nums[0][0];const map={'পঁয়তাল্লিশটি':'৪৫','দুই লক্ষ':'২,০০,০০০','আটশত':'৮০০','এক হাজার':'১,০০০'};const number=document.createElement('div');number.className='hero-number';number.textContent=map[num]||num.replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[+d]);visual.appendChild(number)}
-        if(items.length){const row=document.createElement('div');row.className='feature-cards';items.forEach(it=>{const card=document.createElement('div');card.className='feature-card';card.appendChild(svgIcon(it.icon,THEME==='infographic'?92:62));const label=document.createElement('span');label.textContent=it.label;card.appendChild(label);row.appendChild(card)});visual.appendChild(row)}else{const icon=document.createElement('div');icon.className='feature-symbol';const pick=/কুরআন|তাফসির|হাদিস|কিতাব|বই|পিডিএফ/.test(s.text)?'book':/নামাজ|সেহরি|ইফতার|সময়/.test(s.text)?'clock':/কিবলা|কম্পাস/.test(s.text)?'compass':/তাসবিহ|দোয়া/.test(s.text)?'diamond':/মসজিদ/.test(s.text)?'mosque':'star8';icon.appendChild(svgIcon(pick,THEME==='infographic'?150:100));visual.appendChild(icon)}
-      }
+'use strict';
+(function (global) {
+  const PV = global.PV = global.PV || {};
+  let state = { scenes: [], total: 0, project: {}, opts: {}, elements: {}, brandName: '', direction: 'ltr' };
+
+  function buildDOM(opts) {
+    const stage = document.getElementById('stage');
+    stage.innerHTML = '';
+    stage.style.cssText = 'position:relative;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 80% at 50% 30%, #14301c, #0d1f12, #050a07);';
+
+    const logoCard = document.createElement('div');
+    logoCard.id = 'logo-card';
+    logoCard.style.cssText = 'position:absolute;left:50%;top:190px;width:520px;transform:translateX(-50%) scale(0.2);opacity:0;border-radius:56px;overflow:hidden;box-shadow:0 0 30px rgba(201,162,39,0.5);z-index:20;';
+    if (opts.logo) {
+      const img = document.createElement('img');
+      img.src = opts.logo;
+      img.style.cssText = 'width:100%;display:block;background:#fff;';
+      logoCard.appendChild(img);
     }
-    function setCaption(s,t){capText.innerHTML='';if(!s)return;const parts=words(s.text);const duration=Math.max(.25,s.end-s.start),tokens=parts.filter(p=>p.trim());let weight=tokens.reduce((n,w)=>n+[...w].length+1,0),acc=0;parts.forEach((w)=>{if(!w.trim()){capText.appendChild(document.createTextNode(w));return}const span=document.createElement('span');span.className='karaoke-word';span.textContent=w;const st=.15+acc/Math.max(1,weight)*Math.max(.6,duration-.55);span.dataset.start=st;span.dataset.end=st+Math.max(.12,([...w].length+1)/Math.max(1,weight)*Math.max(.6,duration-.55));acc += [...w].length+1;capText.appendChild(span)})}
-    window.fit=function(){let size=THEME==='infographic'?72:64;capText.style.fontSize=size+'px';const min=THEME==='infographic'?40:34;while(size>min&&(capText.scrollHeight>caption.clientHeight*.66||capText.scrollWidth>caption.clientWidth*.92)){size-=2;capText.style.fontSize=size+'px'}return {captionFontSize:size}};
-    let current=-2;
-    window.seek=function(t){t=Math.max(0,Math.min(total,t));let idx=-1;for(let i=0;i<scenes.length;i++){if(t>=scenes[i].start-.01&&(i===scenes.length-1?t<=total:t<=scenes[i].end+.01))idx=i}const s=idx>=0?scenes[idx]:null;if(idx!==current){current=idx;renderVisual(s,idx,t);setCaption(s,t);window.fit()}const lv=level(t),last=idx===scenes.length-1;root.style.setProperty('--lv',lv);root.style.setProperty('--time',t);root.style.setProperty('--mood',({respectful:'#e9c46a',happy:'#ffbe5a',informative:'#3cc8aa',excited:'#aae650',calm:'#6eaaff',enthusiastic:'#ffa046'}[s&&s.mood]||'#e9c46a'));caption.style.setProperty('--ang',(t*90)+'deg');caption.style.boxShadow=`0 0 ${24+80*lv}px ${4+14*lv}px #20a84f${Math.round((.22+.35*lv)*255).toString(16).padStart(2,'0')}`;caption.querySelectorAll('.karaoke-word').forEach(w=>{const a=Number(w.dataset.start),b=Number(w.dataset.end),lt=s?t-s.start:0,active=lt>=a&&lt<=b;w.classList.toggle('active',active);w.style.opacity=lt<a?'.12':'1';w.style.transform=active?'translateY(-4px) scale(1.035)':'translateY(0) scale(1)'});eq.querySelectorAll('i').forEach((b,i)=>{const wave=.5+.5*Math.abs(Math.sin(6*t+.7*i)),shape=.65+.35*Math.sin(.45*i+1);b.style.height=(4+(THEME==='infographic'?40:22)*Math.max(.04,lv*1.15*wave*shape))+'px'});bar.style.width=(100*t/Math.max(.001,total))+'%';bar.style.transform='translateZ(0)';logo.style.setProperty('--pulse',(1+.016*lv+.009*Math.sin(t*1.7)));logo.style.opacity=THEME==='podcast'&&!(s&&idx===1)?'.92':'1';logo.style.transform=THEME==='infographic'?`translateX(-50%) scale(${1+.012*Math.sin(t*2)+.016*lv})`:`scale(${1+.006*Math.sin(t*2)+.016*lv})`;root.style.setProperty('--rot',(t*2.2)+'deg');particles.style.opacity=.13+.07*lv;visual.style.setProperty('--scene-progress',s?Math.min(1,Math.max(0,(t-s.start)/Math.max(.1,s.end-s.start))):0);visual.style.opacity=s?'1':'0';visual.style.transform=s?`translateY(${(1-Math.min(1,(t-s.start)/.45))*24}px) scale(${.985+.015*Math.min(1,(t-s.start)/.45)})`:'translateY(20px)';caption.style.opacity=s?'1':'0';caption.style.transform=s?'translateY(0)':'translateY(14px)';};
-    return total;
-  };
-})();
+    stage.appendChild(logoCard);
+
+    const visual = document.createElement('div');
+    visual.id = 'visual';
+    visual.style.cssText = 'position:absolute;left:60px;top:470px;width:960px;height:740px;display:flex;align-items:center;justify-content:center;';
+    stage.appendChild(visual);
+
+    const captionPanel = document.createElement('div');
+    captionPanel.id = 'caption-panel';
+    captionPanel.style.cssText = 'position:absolute;left:50px;top:1230px;width:980px;height:540px;border-radius:64px;background:rgba(10,22,14,0.9);box-shadow:0 0 30px rgba(201,162,39,0.25);z-index:30;';
+    stage.appendChild(captionPanel);
+
+    const captionBox = document.createElement('div');
+    captionBox.id = 'caption-box';
+    captionBox.style.cssText = 'position:absolute;left:56px;top:74px;right:56px;bottom:96px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;font-size:56px;line-height:1.42;text-align:center;';
+    captionPanel.appendChild(captionBox);
+
+    const progress = document.createElement('div');
+    progress.style.cssText = 'position:absolute;left:70px;bottom:90px;width:940px;height:12px;background:rgba(255,255,255,0.1);border-radius:6px;z-index:40;';
+    const progressFill = document.createElement('div');
+    progressFill.id = 'progress-fill';
+    progressFill.style.cssText = 'height:100%;width:0%;background:linear-gradient(90deg,#c9a227,#e8c547);border-radius:6px;';
+    progress.appendChild(progressFill);
+    stage.appendChild(progress);
+
+    state.elements = { stage, logoCard, visual, captionPanel, captionBox, progressFill };
+  }
+
+  function seek(t) {
+    const scene = PV.timeline.activeScene(t, state.scenes, state.total);
+    const lv = PV.audio.level(t);
+    if (state.elements.progressFill) {
+      state.elements.progressFill.style.width = (Math.min(1, t / state.total) * 100) + '%';
+    }
+    // caption
+    const box = state.elements.captionBox;
+    if (scene) {
+      box.textContent = scene.text;
+      box.dir = state.direction;
+    } else box.textContent = '';
+    // logo
+    if (state.elements.logoCard) {
+      const show = t > 0.5;
+      state.elements.logoCard.style.opacity = show ? '1' : '0';
+      state.elements.logoCard.style.transform = show ? 'translateX(-50%) scale(1)' : 'translateX(-50%) scale(0.2)';
+    }
+    // visual
+    if (state.elements.visual && scene) {
+      state.elements.visual.innerHTML = '<div style="font-size:48px;color:var(--pv-cream);text-align:center;padding:40px;">' + scene.text + '</div>';
+    }
+  }
+
+  function fit() { return { captionSize: 56 }; }
+
+  function init(raw, opts) {
+    state.opts = opts || {};
+    state.project = (opts && opts.project) || {};
+    const detected = PV.detect.detectAll(raw, state.project);
+    state.direction = detected.direction;
+    state.brandName = detected.brandName || state.project.brandName || '';
+    state.scenes = PV.parse.parseTimestamps(raw);
+    const audioDur = (opts && opts.audioDuration) || 0;
+    const tail = (opts && opts.tailPad != null) ? opts.tailPad : 2.0;
+    state.total = PV.timeline.computeTotal(state.scenes, audioDur, tail);
+    PV.timeline.total = state.total;
+    buildDOM(opts);
+    return state.total;
+  }
+
+  global.init = init;
+  global.fit = fit;
+  global.seek = seek;
+})(typeof window !== 'undefined' ? window : global);

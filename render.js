@@ -1,7 +1,148 @@
-const fs=require('fs'),path=require('path');const {spawn,execFileSync}=require('child_process');const {chromium}=require('playwright');const E=require('./tool-env'),A=require('./tool-assets'),Audio=require('./tool-audio');
-function run(cmd,args,opts={}){execFileSync(cmd,args,{stdio:'inherit',...opts})}
-(async()=>{let browser;try{const theme=E.theme==='infographic'?'infographic':'podcast',file=theme==='infographic'?'index-infographic.html':'index-podcast.html',designW=theme==='infographic'?1080:1920,designH=theme==='infographic'?1920:1080,width=E.width||designW,fps=E.fps,audioDuration=Audio.duration(),raw=fs.readFileSync('timestamps.txt','utf8'),project=JSON.parse(fs.readFileSync('project.json','utf8'));const assets=require('./tool-assets');
- browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});const page=await browser.newPage({viewport:{width:designW,height:designH},deviceScaleFactor:width/designW});page.on('pageerror',e=>console.error('PAGE ERROR:',e.message));page.on('console',m=>{if(m.type()==='error')console.error('PAGE CONSOLE:',m.text())});await page.goto('file://'+path.resolve(file));const total=await page.evaluate(({raw,opts})=>window.init(raw,opts),{raw,opts:{project,logo:assets.logo,badge:assets.badge,audioDuration,tailPad:E.tail}});await page.evaluate(async()=>{await document.fonts.ready;const imgs=[...document.images];await Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(r=>{i.onload=r;i.onerror=r})));});if(assets.audio){const env=Audio.envelope(fps,audioDuration);await page.evaluate(({env,fps})=>window.setAudio(env,fps),{env,fps})}const report=await page.evaluate(()=>({fit:window.fit(),lastEnd:Math.max(...window.__scenes.map(s=>s.end),0)}));console.log(`Theme: ${theme}; design ${designW}x${designH}; output width ${width}; FPS ${fps}`);console.log(`Audio ${audioDuration.toFixed(3)}s; last timestamp ${report.lastEnd.toFixed(3)}s; tail ${E.tail.toFixed(2)}s; total ${total.toFixed(3)}s; fit ${JSON.stringify(report.fit)}`);
- const start=Math.min(E.start,total),end=E.end===null?total:Math.min(E.end,total);if(end<=start)throw Error('END must be greater than START and within total duration');const duration=end-start,frames=Math.ceil(duration*fps),silent=`.${theme}-silent.mp4`,out=E.out;const ff=spawn('ffmpeg',['-y','-loglevel','error','-f','image2pipe','-vcodec','mjpeg','-r',String(fps),'-i','-','-an','-c:v','libx264','-crf',width<designW?'21':'18','-preset','medium','-pix_fmt','yuv420p','-r',String(fps),'-t',String(duration),'-movflags','+faststart',silent],{stdio:['pipe','ignore','inherit']});for(let i=0;i<frames;i++){await page.evaluate(t=>window.seek(t),start+i/fps);const jpg=await page.screenshot({type:'jpeg',quality:95});if(!ff.stdin.write(jpg))await new Promise((resolve,reject)=>{ff.stdin.once('drain',resolve);ff.stdin.once('error',reject)});if(i%60===0)console.log(`Rendered frame ${i}/${frames}`)}ff.stdin.end();await new Promise((resolve,reject)=>{ff.once('error',reject);ff.once('close',code=>code===0?resolve():reject(Error('FFmpeg video encode exited '+code)))});await browser.close();browser=null;
- if(assets.audio){const fade=Math.max(0,Math.min(Number(process.env.AUDIO_FADE_OUT??.5),audioDuration));const filters=[`volume=${E.volume}`];if(start===0)filters.push('afade=t=in:st=0:d=1.5');if(fade>0&&audioDuration>fade)filters.push(`afade=t=out:st=${(audioDuration-fade).toFixed(3)}:d=${fade.toFixed(3)}`);filters.push(`apad=whole_dur=${duration}`);const args=['-y','-i',silent,'-ss',String(start),'-i',assets.audio,'-map','0:v:0','-map','1:a:0','-af',filters.join(','),'-c:v','copy','-c:a','aac','-b:a','192k','-t',String(duration),'-movflags','+faststart',out];run('ffmpeg',args)}else run('ffmpeg',['-y','-i',silent,'-c','copy','-t',String(duration),out]);fs.unlinkSync(silent);const vdur=Number(execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',out],{encoding:'utf8'}).trim());console.log(`SUCCESS: ${out} (${vdur.toFixed(3)}s). Audio duration ${audioDuration.toFixed(3)}s; total planned ${total.toFixed(3)}s.`);
- }catch(e){console.error('RENDER FAILED:',e.stack||e);process.exitCode=1}finally{if(browser)await browser.close()}})();
+'use strict';
+/**
+ * render.js – thin entry: env → assets → audio → browser → frames → ffmpeg
+ */
+const fs = require('fs');
+const path = require('path');
+const { parseEnv } = require('./tool-env');
+const { scanAssets, loadLogoDataUrl } = require('./tool-assets');
+const { probeDuration, analyzeEnvelope, buildMuxArgs } = require('./tool-audio');
+const { createPage, runInit, waitFonts, runFit, seekAndScreenshot } = require('./tool-browser');
+const { createEncoder } = require('./tool-encoder');
+
+async function main() {
+  const env = parseEnv();
+  const root = process.cwd();
+  console.log('[render] theme=', env.theme, 'size=', env.width + 'x' + env.height, 'fps=', env.fps);
+
+  // Assets
+  const assets = scanAssets(root);
+  console.log('[assets] logo=', assets.logo, 'badge=', assets.badge, 'audio=', assets.audio, 'fonts=', assets.fonts.length);
+
+  // Project & scenes
+  let project = {};
+  if (fs.existsSync(path.join(root, 'project.json'))) {
+    project = JSON.parse(fs.readFileSync(path.join(root, 'project.json'), 'utf8'));
+  }
+  let scenes = null;
+  if (fs.existsSync(path.join(root, 'scenes.json'))) {
+    try {
+      scenes = JSON.parse(fs.readFileSync(path.join(root, 'scenes.json'), 'utf8'));
+    } catch (_) { scenes = null; }
+  }
+
+  // Timestamps
+  const tsPath = path.join(root, 'timestamps.txt');
+  if (!fs.existsSync(tsPath)) {
+    console.error('timestamps.txt missing');
+    process.exit(1);
+  }
+  const timestampsText = fs.readFileSync(tsPath, 'utf8');
+
+  // Audio
+  let audioDuration = 0;
+  let envelope = null;
+  if (assets.audio) {
+    const audioPath = path.join(root, assets.audio);
+    audioDuration = await probeDuration(audioPath);
+    console.log('[audio] duration=', audioDuration.toFixed(3), 's');
+    envelope = await analyzeEnvelope(audioPath, env.fps);
+  } else {
+    console.log('[audio] no audio file – silent video');
+  }
+
+  // END_PAD
+  let endPad = env.endPad;
+  if (endPad == null) {
+    endPad = (project.endPad != null) ? project.endPad : (assets.audio ? 2.0 : 0.5);
+  }
+
+  // HTML
+  const htmlFile = env.isInfographic ? 'index-infographic.html' : 'index-podcast.html';
+  if (!fs.existsSync(path.join(root, htmlFile))) {
+    console.error(htmlFile + ' missing');
+    process.exit(1);
+  }
+
+  const logoData = loadLogoDataUrl(root, assets.logo);
+
+  const opts = {
+    project,
+    scenes,
+    badge: assets.badge,
+    logo: assets.logo,
+    logoData,
+    audioDuration,
+    tailPad: endPad
+  };
+
+  const { browser, page } = await createPage(env, htmlFile);
+
+  try {
+    const total = await runInit(page, timestampsText, opts);
+    console.log('[init] total duration=', total.toFixed(3), 's (audio=', audioDuration.toFixed(3), '+ pad=', endPad, ')');
+
+    // WARN if mismatch
+    if (assets.audio) {
+      // last scene end is inside the page; we approximate from total
+      if (Math.abs(audioDuration - (total - endPad)) > 1.0) {
+        console.warn('[WARNING] audio length and last timestamp end differ by >1s; chosen total=', total.toFixed(3));
+      }
+    }
+
+    await waitFonts(page);
+    await runFit(page);
+
+    if (envelope) {
+      await page.evaluate(({ env, fps }) => {
+        if (typeof window.setAudio === 'function') window.setAudio(env, fps);
+      }, { env: Array.from(envelope), fps: env.fps });
+    }
+
+    const startT = env.start || 0;
+    const endT = env.end != null ? env.end : total;
+    const duration = Math.max(0.1, endT - startT);
+    const frameCount = Math.ceil(duration * env.fps);
+    console.log('[render] frames=', frameCount, 'from', startT, 'to', endT);
+
+    const audioArgs = assets.audio
+      ? buildMuxArgs({
+          audioPath: path.join(root, assets.audio),
+          start: startT,
+          duration,
+          audioDuration,
+          audioVolume: env.audioVolume,
+          audioFadeOut: env.audioFadeOut,
+          outPath: env.out
+        })
+      : { map: ['-map', '0:v'], duration: ['-t', String(duration)] };
+
+    const encoder = createEncoder({
+      width: env.width,
+      height: env.height,
+      fps: env.fps,
+      duration,
+      outPath: env.out,
+      audioArgs
+    });
+
+    for (let i = 0; i < frameCount; i++) {
+      const t = startT + i / env.fps;
+      const jpeg = await seekAndScreenshot(page, t);
+      await encoder.writeFrame(jpeg);
+      if (i % 60 === 0) {
+        console.log(`[progress] frame ${i}/${frameCount} t=${t.toFixed(2)}`);
+      }
+    }
+
+    await encoder.finish();
+    console.log('[done] wrote', env.out);
+  } finally {
+    await browser.close();
+  }
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

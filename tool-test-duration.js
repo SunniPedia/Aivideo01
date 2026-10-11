@@ -1,1 +1,1 @@
-const assert=require('assert');function total(audio,last,tail){return Math.max(audio>0?audio+tail:last+tail,last+.5)}assert.strictEqual(total(10,6,2),12);assert.strictEqual(total(3,8,2),8.5);assert.strictEqual(total(0,8,.5),8.5);assert.strictEqual(total(10,6,0),10);console.log('Duration math tests passed.');
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

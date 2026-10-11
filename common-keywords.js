@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.keywords={greetings:["আসসালামু আলাইকুম"],store:["প্লে স্টোর","ইনস্টল"]};
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

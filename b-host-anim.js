@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.animateHost=(t)=>{};
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

@@ -1,1 +1,41 @@
-@font-face{font-family:SolaimanLipi;src:url("SolaimanLipi-Regular.ttf") format("truetype");font-display:block}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#041b12;color:#fff8e6;font-family:SolaimanLipi,"Noto Serif",serif}body{font-synthesis:none}#root{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 30%,#15573b 0%,#082d1e 45%,#020906 100%);--gold:#e9c46a;--green:#20a84f;--cream:#fff8e6;--lv:0}.ambient{position:absolute;inset:-20%;z-index:-3;background:radial-gradient(ellipse at 52% 42%,#16754666 0%,transparent 42%),radial-gradient(ellipse at 12% 80%,#d9aa3820 0%,transparent 36%);transform:rotate(var(--rot,0deg)}.particles{position:absolute;inset:-30%;z-index:-2;opacity:.15;background-image:radial-gradient(#e9c46a 1px,transparent 1.5px),radial-gradient(#20a84f 1px,transparent 1.5px);background-size:76px 76px,117px 117px;background-position:0 0,35px 40px;mask-image:linear-gradient(transparent,#000 20%,#000 85%,transparent)}.ornament{position:absolute;left:50%;top:1.8%;width:32%;transform:translateX(-50%);opacity:.65}.ornament svg{width:100%;height:auto;fill:none;stroke:var(--gold);stroke-width:1.5}.logo-card{object-fit:contain;background:#fff;border:3px solid var(--gold);border-radius:28px;padding:8px;box-shadow:0 0 calc(26px + 40px*var(--lv)) #e9c46a55,0 14px 44px #0006;z-index:2}.visual-area{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;text-align:center;transition:none;will-change:transform,opacity}.caption-panel{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;border:2px solid transparent;background:linear-gradient(135deg,#041b12f5,#0b3828f5) padding-box,conic-gradient(from var(--ang,0deg),#20a84f,#e9c46a,#fff0bc,#14804a,#20a84f) border-box;border-radius:36px;box-shadow:0 0 35px #20a84f44,inset 0 0 35px #e9c46a0b;overflow:hidden;z-index:3;padding:4% 5%;}.caption-panel:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;background-image:radial-gradient(#e9c46a 1px,transparent 1px);background-size:22px 22px;mask-image:linear-gradient(90deg,transparent,#000 25%,#000 75%,transparent)}.caption-ornament{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:90px;opacity:.8}.caption-ornament svg{width:100%;fill:none;stroke:var(--gold);stroke-width:1.4}.caption-text{position:relative;z-index:1;width:100%;max-height:75%;font-weight:700;line-height:1.42;text-wrap:pretty;text-shadow:0 2px 16px #0008;overflow:hidden}.karaoke-word{display:inline-block;white-space:pre;transition:none;color:var(--cream);text-shadow:none}.karaoke-word.active{color:var(--gold);text-shadow:0 0 24px #e9c46a99}.equalizer{position:absolute;left:8%;right:8%;bottom:5%;height:34px;display:flex;align-items:center;justify-content:center;gap:5px;opacity:.7}.equalizer i{display:block;flex:1;max-width:7px;min-height:3px;border-radius:5px;background:linear-gradient(180deg,#f8e4a2,#20a84f);box-shadow:0 0 8px #20a84f44}.progress-track{position:absolute;left:5%;right:5%;bottom:2.5%;height:7px;border-radius:10px;background:#ffffff22;overflow:hidden;z-index:5}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#168c49,#20a84f,#e9c46a);box-shadow:0 0 12px #e9c46a88}.vector-icon{flex:none;color:var(--gold);filter:drop-shadow(0 0 14px #e9c46a35)}.greeting-halo{display:grid;place-items:center;width:210px;height:210px;border:1px solid #e9c46a77;border-radius:50%;box-shadow:0 0 70px #e9c46a1c,inset 0 0 45px #e9c46a12}.hero-title{color:var(--gold);font-size:1.1em;font-weight:700;text-shadow:0 0 35px #e9c46a66;max-width:95%;line-height:1.35}.hero-subtitle{min-height:2px}.feature-symbol{display:grid;place-items:center;width:180px;height:180px;border:1px solid #e9c46a66;border-radius:36px;background:linear-gradient(135deg,#ffffff0c,#e9c46a08);box-shadow:inset 0 0 45px #e9c46a0d,0 16px 50px #0003}.feature-cards{display:flex;justify-content:center;align-items:stretch;gap:18px;width:100%}.feature-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;flex:1;min-width:0;padding:20px 14px;border:1px solid #e9c46a99;border-radius:24px;background:linear-gradient(145deg,#0c3829f5,#041b12f5);box-shadow:0 18px 45px #0004,inset 0 1px #ffffff16;color:var(--cream);font-size:.42em;font-weight:700;line-height:1.35}.feature-card span{max-width:100%;overflow-wrap:anywhere}.hero-number{font-family:"Noto Serif",SolaimanLipi,serif;font-size:2.3em;font-weight:800;line-height:1;color:var(--gold);text-shadow:0 0 35px #e9c46a55}.store-badge{width:min(84%,780px);max-height:58%;object-fit:contain;filter:drop-shadow(0 18px 35px #0008)}.store-brand,.closing-brand,.hero-brand{font-size:.48em;color:var(--gold);font-weight:700;text-shadow:0 0 18px #e9c46a44;max-width:90%;overflow-wrap:anywhere}.closing-icons{display:flex;gap:34px;justify-content:center;align-items:center}.closing-icon{width:1.25em;height:1.25em;display:grid;place-items:center;border:1px solid #e9c46a66;border-radius:50%;background:#0b382888;padding:10px;animation:none}.closing-brand{font-size:.44em}.brand-ring{display:grid;place-items:center;width:125px;height:125px;border:1px solid #e9c46a88;border-radius:50%;box-shadow:0 0 35px #e9c46a22}.hero-logo{width:38%;height:44%;object-fit:contain;background:#fff;padding:10px;border:2px solid var(--gold);border-radius:24px;box-shadow:0 0 36px #e9c46a44}.hero-brand{font-size:.38em}
+/* common-tokens.css – palette CSS variables, @font-face, font stacks */
+
+:root {
+  --pv-primary: #1a5f2a;
+  --pv-accent: #c9a227;
+  --pv-highlight: #e8c547;
+  --pv-bg: #0d1f12;
+  --pv-mid-bg: #14301c;
+  --pv-dark-bg: #0a160e;
+  --pv-text: #f5f0e6;
+  --pv-cream: #f8f4e8;
+  --pv-mood: #c9a227;
+  --ang: 0deg;
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  src: url('SolaimanLipi-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: 'SolaimanLipi';
+  src: url('SolaimanLipi-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: block;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--pv-dark-bg);
+  font-family: 'Noto Serif', 'SolaimanLipi', 'Noto Sans Bengali', serif;
+  color: var(--pv-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}

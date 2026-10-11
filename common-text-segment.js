@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.words=s=>s.split(/\s+/).filter(Boolean);
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.classify=(s,last)=>/ইনস্টল|স্টোর/.test(s)?"store":last?"closing":/❝/.test(s)?"brand":"caption";
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);

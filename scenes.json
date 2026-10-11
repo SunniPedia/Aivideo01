@@ -1,116 +1,152 @@
-{
-  "scenes": [
-    {
-      "line": 1,
-      "match": "আসসালামু আলাইকুম",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 2,
-      "match": "ইলমে দ্বিন অর্জনের এ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 3,
-      "match": "এতে পাবেন আল কুরআনের",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 4,
-      "match": "সাথে সম্পূর্ণ তাফসীর",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 5,
-      "match": "তাফসীরে খাযাইনুল ইরফ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 6,
-      "match": "পঁয়তাল্লিশটি হাদিস ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 7,
-      "match": "আটশত এর বেশি অফলাইন ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 8,
-      "match": "এক হাজারের বেশি অনলা",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 9,
-      "match": "লেখক ও বিষয়ভিত্তিক ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 10,
-      "match": "নামাজের সময়, সেহরি ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 11,
-      "match": "কিবলা কম্পাস, মসজিদ ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 12,
-      "match": "ডিজিটাল তাসবিহ সব কি",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 13,
-      "match": "আরও রয়েছে বয়ান, না",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 14,
-      "match": "মাসনুন দোয়া, ইসলামি",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 15,
-      "match": "আজই প্লে স্টোর থেকে ",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    },
-    {
-      "line": 16,
-      "match": "নিজে পড়ুন, অন্যকে প",
-      "type": "caption",
-      "items": [],
-      "numbers": []
-    }
-  ]
-}
+[
+  {
+    "line": 1,
+    "match": "আসসালামু আলাইকুম",
+    "type": "greeting",
+    "items": [],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 2,
+    "match": "ইলমে দ্বিন অর্জনের এক অনন্য মাধ্যম",
+    "type": "brand",
+    "items": [],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 3,
+    "match": "এতে পাবেন আল কুরআনের দুটি বিশুদ্ধ",
+    "type": "cards",
+    "items": [
+      {"label": "কানযুল ঈমান", "icon": "book"},
+      {"label": "ইরফানুল কুরআন", "icon": "book"}
+    ],
+    "numbers": [{"value": 2, "label": "বিশুদ্ধ অনুবাদ", "plus": false}],
+    "icons": []
+  },
+  {
+    "line": 4,
+    "match": "সাথে সম্পূর্ণ তাফসীরে মাযহারী",
+    "type": "single-card",
+    "items": [{"label": "তাফসীরে মাযহারী", "icon": "book"}],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 5,
+    "match": "তাফসীরে খাযাইনুল ইরফানসহ চলমান",
+    "type": "numbers",
+    "items": [{"label": "তাফসিরের কাজ", "icon": "book"}],
+    "numbers": [{"value": 8, "label": "তাফসির", "plus": false}],
+    "icons": []
+  },
+  {
+    "line": 6,
+    "match": "পঁয়তাল্লিশটি হাদিস গ্রন্থে দুই লক্ষ",
+    "type": "numbers",
+    "items": [{"label": "হাদিস গ্রন্থ", "icon": "book"}, {"label": "হাদিস", "icon": "quote"}],
+    "numbers": [
+      {"value": 45, "label": "হাদিস গ্রন্থ", "plus": false},
+      {"value": 270335, "label": "হাদিস", "plus": false}
+    ],
+    "icons": []
+  },
+  {
+    "line": 7,
+    "match": "আটশত এর বেশি অফলাইন কিতাব",
+    "type": "numbers",
+    "items": [{"label": "অফলাইন কিতাব", "icon": "book"}],
+    "numbers": [{"value": 800, "label": "অফলাইন কিতাব", "plus": true}],
+    "icons": []
+  },
+  {
+    "line": 8,
+    "match": "এক হাজারের বেশি অনলাইন পিডিএফ",
+    "type": "numbers",
+    "items": [{"label": "অনলাইন পিডিএফ বই", "icon": "document"}],
+    "numbers": [{"value": 1000, "label": "অনলাইন পিডিএফ", "plus": true}],
+    "icons": []
+  },
+  {
+    "line": 9,
+    "match": "লেখক ও বিষয়ভিত্তিক সুন্দরভাবে",
+    "type": "cards",
+    "items": [
+      {"label": "লেখক", "icon": "person"},
+      {"label": "বিষয়ভিত্তিক", "icon": "grid"}
+    ],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 10,
+    "match": "নামাজের সময়, সেহরি ইফতার",
+    "type": "cards",
+    "items": [
+      {"label": "নামাজের সময়", "icon": "clock"},
+      {"label": "সেহরি ইফতার", "icon": "moon"}
+    ],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 11,
+    "match": "কিবলা কম্পাস, মসজিদ খুঁজি",
+    "type": "cards",
+    "items": [
+      {"label": "কিবলা কম্পাস", "icon": "compass"},
+      {"label": "মসজিদ খুঁজি", "icon": "mosque"}
+    ],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 12,
+    "match": "ডিজিটাল তাসবিহ সব কিছু এক",
+    "type": "single-card",
+    "items": [{"label": "ডিজিটাল তাসবিহ", "icon": "beads"}],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 13,
+    "match": "আরও রয়েছে বয়ান, নাত",
+    "type": "cards",
+    "items": [
+      {"label": "বয়ান", "icon": "mic"},
+      {"label": "নাত", "icon": "music"}
+    ],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 14,
+    "match": "মাসনুন দোয়া, ইসলামিক নাম",
+    "type": "cards",
+    "items": [
+      {"label": "মাসনুন দোয়া", "icon": "hands"},
+      {"label": "ইসলামিক নাম", "icon": "name"},
+      {"label": "লাইভ হারামাইন", "icon": "live"}
+    ],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 15,
+    "match": "আজই প্লে স্টোর থেকে ইনস্টল",
+    "type": "store",
+    "items": [],
+    "numbers": [],
+    "icons": []
+  },
+  {
+    "line": 16,
+    "match": "নিজে পড়ুন, অন্যকে পড়ার",
+    "type": "closing",
+    "items": [],
+    "numbers": [],
+    "icons": ["book", "share", "star"]
+  }
+]

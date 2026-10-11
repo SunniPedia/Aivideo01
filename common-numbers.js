@@ -1,1 +1,1 @@
-window.PV=window.PV||{};PV.numbers=s=>s.match(/[০-৯0-9]+/g)||[];
+'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);
