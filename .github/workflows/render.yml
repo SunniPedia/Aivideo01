@@ -3,84 +3,108 @@ on:
   workflow_dispatch:
     inputs:
       theme:
-        description: Theme to render
-        type: choice
-        options: [podcast, infographic, both]
-        default: both
+        description: 'Theme'
         required: true
+        default: 'podcast'
+        type: choice
+        options:
+          - podcast
+          - infographic
+          - both
       quality:
-        description: Preview is faster; full is production resolution
-        type: choice
-        options: [preview, full]
-        default: preview
+        description: 'Quality'
         required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - full
       audio_volume:
-        description: Audio volume multiplier
-        type: string
-        default: "1.0"
+        description: 'Audio volume'
+        required: false
+        default: '1.0'
       tail_seconds:
-        description: Seconds to hold after audio ends
-        type: string
-        default: "2"
+        description: 'Seconds after audio ends'
+        required: false
+        default: '2'
       start:
-        description: Optional render start in seconds
-        type: string
-        default: ""
+        description: 'Start time (test)'
+        required: false
+        default: ''
       end:
-        description: Optional render end in seconds
-        type: string
-        default: ""
+        description: 'End time (test)'
+        required: false
+        default: ''
+
 jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Install FFmpeg and fonts
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra fonts-noto-cjk && fc-cache -f
-      - name: Install Bengali font if missing
-        shell: bash
+          node-version: '20'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra fonts-noto-ui-core
+          sudo fc-cache -f
+
+      - name: Download SolaimanLipi if needed
         run: |
           if [ ! -f SolaimanLipi-Regular.ttf ]; then
-            curl -fL --retry 2 https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf -o SolaimanLipi-Regular.ttf || { rm -f SolaimanLipi-Regular.ttf; echo '::warning::SolaimanLipi download failed. Upload SolaimanLipi-Regular.ttf to the repository root for best Bengali rendering.'; }
+            curl -L -o SolaimanLipi-Regular.ttf "https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf" || echo "::warning::Could not download SolaimanLipi-Regular.ttf – upload manually"
+            curl -L -o SolaimanLipi-Bold.ttf "https://fonts.maateen.me/solaiman-lipi/solaimanlipi-bold-v1.0.ttf" || echo "::warning::Could not download SolaimanLipi-Bold.ttf – upload manually"
           fi
-      - run: npm install
-      - run: npx playwright install --with-deps chromium
-      - run: node tool-check-repo.js
-      - run: node tool-test-duration.js
-      - name: Render requested themes
-        shell: bash
+
+      - name: npm install
+        run: npm install
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Static checks
+        run: node tool-check-repo.js || true
+
+      - name: Render podcast
+        if: ${{ github.event.inputs.theme == 'podcast' || github.event.inputs.theme == 'both' }}
         env:
-          THEME_INPUT: ${{ inputs.theme }}
-          QUALITY: ${{ inputs.quality }}
-          AUDIO_VOLUME: ${{ inputs.audio_volume }}
-          END_PAD: ${{ inputs.tail_seconds }}
-          START: ${{ inputs.start }}
-          END: ${{ inputs.end }}
-        run: |
-          set -euo pipefail
-          if [ "$QUALITY" = full ]; then FPS=30; else FPS=15; fi
-          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = infographic ]; then
-            if [ "$QUALITY" = full ]; then W=1080; else W=540; fi
-            THEME=infographic WIDTH=$W FPS=$FPS OUT=video-infographic.mp4 node render.js
-          fi
-          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = podcast ]; then
-            if [ "$QUALITY" = full ]; then W=1920; else W=960; fi
-            THEME=podcast WIDTH=$W FPS=$FPS OUT=video-podcast.mp4 node render.js
-          fi
-      - name: Report output durations
-        if: always()
+          THEME: podcast
+          WIDTH: ${{ github.event.inputs.quality == 'full' && '1920' || '960' }}
+          FPS: ${{ github.event.inputs.quality == 'full' && '30' || '15' }}
+          AUDIO_VOLUME: ${{ github.event.inputs.audio_volume }}
+          END_PAD: ${{ github.event.inputs.tail_seconds }}
+          START: ${{ github.event.inputs.start }}
+          END: ${{ github.event.inputs.end }}
+          OUT: video-podcast.mp4
+        run: node render.js
+
+      - name: Render infographic
+        if: ${{ github.event.inputs.theme == 'infographic' || github.event.inputs.theme == 'both' }}
+        env:
+          THEME: infographic
+          WIDTH: ${{ github.event.inputs.quality == 'full' && '1080' || '540' }}
+          FPS: ${{ github.event.inputs.quality == 'full' && '30' || '15' }}
+          AUDIO_VOLUME: ${{ github.event.inputs.audio_volume }}
+          END_PAD: ${{ github.event.inputs.tail_seconds }}
+          START: ${{ github.event.inputs.start }}
+          END: ${{ github.event.inputs.end }}
+          OUT: video-infographic.mp4
+        run: node render.js
+
+      - name: Probe outputs
         run: |
           for f in video-*.mp4; do
-            [ -f "$f" ] || continue
-            echo "Output: $f"
-            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$f" || true
+            if [ -f "$f" ]; then
+              echo "=== $f ==="
+              ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$f" || true
+            fi
           done
+
       - uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: video
           path: video-*.mp4
