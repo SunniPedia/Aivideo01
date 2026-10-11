@@ -3,26 +3,32 @@ on:
   workflow_dispatch:
     inputs:
       theme:
-        description: Theme
+        description: Theme to render
         type: choice
         options: [podcast, infographic, both]
-        default: podcast
+        default: both
+        required: true
       quality:
-        description: Quality
+        description: Preview is faster; full is production resolution
         type: choice
         options: [preview, full]
         default: preview
+        required: true
       audio_volume:
-        description: Audio volume
+        description: Audio volume multiplier
+        type: string
         default: "1.0"
       tail_seconds:
-        description: Tail after audio (seconds)
+        description: Seconds to hold after audio ends
+        type: string
         default: "2"
       start:
-        description: Start time for test render
+        description: Optional render start in seconds
+        type: string
         default: ""
       end:
-        description: End time for test render
+        description: Optional render end in seconds
+        type: string
         default: ""
 jobs:
   render:
@@ -34,14 +40,19 @@ jobs:
         with:
           node-version: 20
       - name: Install FFmpeg and fonts
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra && fc-cache -f
-      - name: Download Bengali font if missing
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra fonts-noto-cjk && fc-cache -f
+      - name: Install Bengali font if missing
+        shell: bash
         run: |
-          if [ ! -f SolaimanLipi-Regular.ttf ]; then curl -fL https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf -o SolaimanLipi-Regular.ttf || { rm -f SolaimanLipi-Regular.ttf; echo '::warning::Upload SolaimanLipi-Regular.ttf manually if Bengali glyphs are missing'; }; fi
+          if [ ! -f SolaimanLipi-Regular.ttf ]; then
+            curl -fL --retry 2 https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf -o SolaimanLipi-Regular.ttf || { rm -f SolaimanLipi-Regular.ttf; echo '::warning::SolaimanLipi download failed. Upload SolaimanLipi-Regular.ttf to the repository root for best Bengali rendering.'; }
+          fi
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - run: node tool-check-repo.js
+      - run: node tool-test-duration.js
       - name: Render requested themes
+        shell: bash
         env:
           THEME_INPUT: ${{ inputs.theme }}
           QUALITY: ${{ inputs.quality }}
@@ -50,10 +61,26 @@ jobs:
           START: ${{ inputs.start }}
           END: ${{ inputs.end }}
         run: |
+          set -euo pipefail
           if [ "$QUALITY" = full ]; then FPS=30; else FPS=15; fi
-          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = infographic ]; then THEME=infographic WIDTH=$([ "$QUALITY" = full ] && echo 1080 || echo 540) FPS=$FPS node render.js; fi
-          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = podcast ]; then THEME=podcast WIDTH=$([ "$QUALITY" = full ] && echo 1920 || echo 960) FPS=$FPS node render.js; fi
+          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = infographic ]; then
+            if [ "$QUALITY" = full ]; then W=1080; else W=540; fi
+            THEME=infographic WIDTH=$W FPS=$FPS OUT=video-infographic.mp4 node render.js
+          fi
+          if [ "$THEME_INPUT" = both ] || [ "$THEME_INPUT" = podcast ]; then
+            if [ "$QUALITY" = full ]; then W=1920; else W=960; fi
+            THEME=podcast WIDTH=$W FPS=$FPS OUT=video-podcast.mp4 node render.js
+          fi
+      - name: Report output durations
+        if: always()
+        run: |
+          for f in video-*.mp4; do
+            [ -f "$f" ] || continue
+            echo "Output: $f"
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$f" || true
+          done
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: video
           path: video-*.mp4
