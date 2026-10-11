@@ -1,11 +1,12 @@
 {
   "name": "islami-world-encyclopedia-video",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Deterministic promo video renderer",
+  "description": "Deterministic Islamic app promo renderer for GitHub Actions",
   "scripts": {
     "render": "node render.js",
-    "check": "node tool-check-repo.js"
+    "check": "node tool-check-repo.js",
+    "test:duration": "node tool-test-duration.js"
   },
   "dependencies": {
     "playwright": "^1.52.0"

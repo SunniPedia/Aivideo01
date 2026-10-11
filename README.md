@@ -1,31 +1,49 @@
-# ইসলামী বিশ্বকোষ ও আল হাদিস S2 — video renderer
+# ইসলামী বিশ্বকোষ ও আল হাদিস S2 — ভিডিও রিপোজিটরি
 
-A GitHub Actions video renderer for both vertical infographic (9:16) and landscape podcast (16:9) themes. Runs in GitHub Actions; no local PC setup is required.
+এই রিপোজিটরিতে বাংলা প্রচারমূলক ভিডিও রেন্ডার করার জন্য দুটি থিম আছে: 9:16 infographic এবং 16:9 podcast/studio। ভিডিও GitHub Actions-এ তৈরি হবে; Android ফোনে স্থানীয়ভাবে Node, Chromium বা FFmpeg ইনস্টল করার প্রয়োজন নেই।
 
-## Phone-only workflow
-1. Create a GitHub repository.
-2. Upload every root file in this ZIP to the repository root. Keep the supplied logo, audio, Google Play badge and `timestamps.txt` in the root.
-3. Create `.github/workflows/render.yml` with **Add file → Create new file** if your upload method did not include it.
-4. Open **Actions → Render Video → Run workflow**, choose theme and preview first; choose full for final quality.
-5. Download `video` from the workflow run's Artifacts.
+## ফোন থেকে চালানোর নিয়ম
+1. GitHub-এ নতুন repository তৈরি করুন।
+2. ZIP extract করে সব root ফাইল এক বা একাধিক batch-এ আপলোড করুন। ফাইলগুলো main/root folder-এ রাখবেন।
+3. `.github/workflows/render.yml` ফাইলটি ঠিক এই path-এ থাকতে হবে। GitHub-এর Add file → Create new file-এ সম্পূর্ণ path লিখে তৈরি করা যায়।
+4. Actions → Render Video → Run workflow খুলুন। প্রথমে `preview`, তারপর চূড়ান্ত আউটপুটের জন্য `full` বেছে নিন। `both` দিলে দুই থিমই রেন্ডার হবে।
+5. সফল workflow-এর `video` artifact ডাউনলোড করুন।
 
-## Edit for another video
-Replace `timestamps.txt` and the root assets. Update `project.json` as needed. `scenes.json` is optional metadata; use `{}` to allow runtime classification. Keep exact text in timestamp lines.
+## ফাইল ম্যাপ
+- `index-infographic.html`, `a-layout.css`, `a-main.js`, `a-logo-motion.js`: উল্লম্ব থিম।
+- `index-podcast.html`, `b-layout.css`, `b-main.js`, `b-studio.js`, `b-host-config.js`, `b-host-svg.js`, `b-host-anim.js`, `b-logo-motion.js`: ল্যান্ডস্কেপ থিম ও হোস্ট-সংক্রান্ত ফাইল।
+- `common-*.js`, `common-tokens.css`: shared parsing/style helpers।
+- `tool-*.js`, `render.js`: environment, asset detection, render, validation and duration tests।
+- `timestamps.txt`: ১৬টি বাংলা দৃশ্যের মূল টেক্সট ও টাইমিং।
+- `project.json`: brand, language, palette, fonts and host configuration।
+- `scenes.json`: timestamp লাইনের সঙ্গে যুক্ত scene metadata।
+- `audio.mp3`, `logo.png`, `google-play-badge.png`: আপনার সরবরাহ করা assets।
+- `.github/workflows/render.yml`: একমাত্র প্রয়োজনীয় subfolder path।
 
-## File map (all files are in root except workflow)
-- `index-infographic.html`, `a-layout.css`, `a-main.js`, `a-logo-motion.js`: vertical theme.
-- `index-podcast.html`, `b-layout.css`, `b-main.js`, `b-studio.js`, `b-host-config.js`, `b-host-svg.js`, `b-host-anim.js`, `b-logo-motion.js`: landscape theme and original presenter illustration.
-- `common-*.js`, `common-tokens.css`: shared parsing, styling and scene helpers.
-- `tool-*.js`, `render.js`: validation and rendering.
-- `timestamps.txt`, `project.json`, `scenes.json`: project data.
-- `logo.png`, `google-play-badge.png`, `audio.mp3`: your project assets.
-- `.github/workflows/render.yml`: GitHub Actions workflow.
+## বর্তমান ডিটেকশন
+| ক্ষেত্র | ব্যবহৃত মান | উৎস |
+|---|---|---|
+| Theme | BOTH | master prompt default |
+| Brand | ইসলামী বিশ্বকোষ ও আল হাদিস S2 | লোগো ও timestamp text |
+| Language | Bengali | timestamps.txt |
+| Direction | LTR (Bengali) | project setting |
+| Digits/grouping | Bengali / lakh grouping | project setting |
+| Palette | deep green, green, gold, cream | logo-inspired project setting |
+| Font | SolaimanLipi with Noto Serif fallback | project setting/workflow |
+| Store badge | Google Play official supplied image | uploaded asset |
+| Audio | audio.mp3, 56.640 s | uploaded file / ffprobe |
+| End pad | 2.0 s | project/workflow default |
 
-## Icon list / originality
-The shared helper library currently names these vector concepts: crescent (Islamic motif), book (reading), diamond (ornament), mosque (worship), heart (care), globe (world), compass (Qibla/navigation), clock (prayer timing), shield (protection). The current scene renderer uses CSS ornaments and supplied official store badge; it does not recreate the Google Play badge. This starter implementation does **not** yet implement the full 79-icon SVG `<symbol>` library or full karaoke word-level timing from the master specification.
+## দৈর্ঘ্য
+অডিও 56.640 সেকেন্ড, শেষ timestamp 56.000 সেকেন্ড। 2 সেকেন্ড tail হলে নির্ধারিত মোট দৈর্ঘ্য 58.640 সেকেন্ড। Renderer video frame-গুলো encode করে পরে অডিও একবার mux করে, এবং ভিডিওর দৈর্ঘ্য পর্যন্ত নীরবতা pad করে। START/END ব্যবহার করলে আংশিক render তৈরি হয়।
 
-## Audio and duration
-Detected audio duration: 56.640 s. Last timestamp ends at 56.000 s. With 2.000 s tail, output duration is 58.640 s (the audio is longer than the final timestamp by 0.640 s). The audio is muxed once and padded with silence to the video duration.
+## পরবর্তী ভিডিও তৈরি
+`timestamps.txt` ও root-এর assets বদলান। `project.json`-এ brand/language/colors/fonts আপডেট করুন। `scenes.json` বর্তমান text-এর সঙ্গে মিলিয়ে আপডেট করুন বা `{}` দিয়ে runtime classification ব্যবহার করুন।
 
-## Verification status
-The generated repository includes a basic JS/JSON checker and duration unit test. These checks have not been executed in a GitHub Actions runner here; a real Chromium render, ffmpeg mux validation, full icon uniqueness scan, all synthetic universality tests, and visual frame inspection are **not verified**. Bengali font download depends on network access during the workflow; upload `SolaimanLipi-Regular.ttf` in the root if download fails. Exact lip-sync would require phoneme data.
+## যাচাইয়ের সীমা ও আইকন নোট
+`tool-check-repo.js` JavaScript syntax, JSON এবং প্রয়োজনীয় ফাইলের উপস্থিতি পরীক্ষা করে; `tool-test-duration.js` duration math পরীক্ষা করে। GitHub Actions-এ সফল render, চূড়ান্ত ফ্রেমের visual QA, পূর্ণ phoneme lip-sync, সম্পূর্ণ 79-icon unique SVG library এবং প্রতিটি universal test এই প্যাকেজে যাচাইকৃত বলে দাবি করা হচ্ছে না। বর্তমান থিমে কয়েকটি মৌলিক নিজস্ব SVG motif/feature icon, decorative ornaments এবং reactive equalizer আছে; Google Play badge আপনার দেওয়া অফিসিয়াল ছবিই। Presenter-এর পূর্ণ professional animation এখনো আলাদা visual QA প্রয়োজন করে।
+
+## Troubleshooting
+- Bengali glyph box বা ভুল font হলে `SolaimanLipi-Regular.ttf` root-এ upload করুন।
+- `page.evaluate`/network error হলে GitHub Actions log-এ page error দেখুন; render-time assets সব local relative paths-এ থাকা উচিত। Workflow কেবল font download step-এ network ব্যবহার করে।
+- 25 MB-এর বেশি ফাইল GitHub web UI-তে সরাসরি upload সীমায় পড়তে পারে; এই project-এর audio ছোট, তবে বড় assets-এর জন্য GitHub-এর supported upload method ব্যবহার করুন।

@@ -1,1 +1,1 @@
-const PV={total:(s,a,t)=>Math.max(a?a+t:0,s.at(-1).end+.5)};if(PV.total([{end:6}],10,2)!==12||PV.total([{end:8}],3,2)!==8.5)process.exit(1);console.log("Duration unit tests passed")
+const assert=require('assert');function total(audio,last,tail){return Math.max(audio>0?audio+tail:last+tail,last+.5)}assert.strictEqual(total(10,6,2),12);assert.strictEqual(total(3,8,2),8.5);assert.strictEqual(total(0,8,.5),8.5);assert.strictEqual(total(10,6,0),10);console.log('Duration math tests passed.');
