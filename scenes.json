@@ -15,8 +15,8 @@
   "type": "cards",
   "items": [
    {
-    "label": "বিশুদ্ধ অনুবাদ কানযুল ঈমান",
-    "icon": "shield"
+    "label": "কানযুল ঈমান",
+    "icon": "open-book"
    },
    {
     "label": "ইরফানুল কুরআন",
@@ -26,7 +26,7 @@
   "numbers": [
    {
     "value": 2,
-    "label": "বিশুদ্ধ অনুবাদ",
+    "label": "টি বিশুদ্ধ অনুবাদ",
     "plus": false
    }
   ]
@@ -49,7 +49,7 @@
   "numbers": [
    {
     "value": 8,
-    "label": "তাফসিরের কাজ",
+    "label": "টি তাফসিরের কাজ",
     "plus": false
    }
   ]
@@ -61,12 +61,12 @@
   "numbers": [
    {
     "value": 45,
-    "label": "হাদিস গ্রন্থে",
+    "label": "টি হাদিস গ্রন্থে",
     "plus": false
    },
    {
     "value": 270335,
-    "label": "হাদিস এখন এক অ্যাপেই",
+    "label": "টি হাদিস এখন এক অ্যাপেই",
     "plus": false
    }
   ]
@@ -173,7 +173,7 @@
   "items": [
    {
     "label": "মাসনুন দোয়া",
-    "icon": "open-hand"
+    "icon": "open-book"
    },
    {
     "label": "ইসলামিক নাম",
