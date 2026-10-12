@@ -1,81 +1,30 @@
-'use strict';
-/**
- * tool-assets.js – Scan root for logo, badge, fonts, audio; ignore reserved repo files
- */
-const fs = require('fs');
-const path = require('path');
-
-const RESERVED = new Set([
-  'index-infographic.html', 'index-podcast.html', 'render.js', 'package.json',
-  'timestamps.txt', 'README.md', 'project.json', 'scenes.json',
-  'tool-env.js', 'tool-browser.js', 'tool-encoder.js', 'tool-audio.js',
-  'tool-assets.js', 'tool-fonts.js', 'tool-check-repo.js', 'tool-test-seek.js',
-  'tool-test-duration.js',
-  'common-tokens.css', 'common-easing.js', 'common-detect.js', 'common-palette.js',
-  'common-parse.js', 'common-timeline.js', 'common-text-segment.js',
-  'common-numbers.js', 'common-numbers-lang.js', 'common-keywords.js',
-  'common-classify.js', 'common-icons-core.js', 'common-icons-topic.js',
-  'common-icon-map.js', 'common-icon-assign.js', 'common-audio-level.js',
-  'common-background.js', 'common-caption.js', 'common-logo.js',
-  'common-store-badge.js', 'common-scenes.js', 'common-layout-fit.js',
-  'a-layout.css', 'a-logo-motion.js', 'a-main.js',
-  'b-layout.css', 'b-studio.js', 'b-logo-motion.js', 'b-main.js',
-  'b-host-config.js', 'b-host-svg.js', 'b-host-anim.js',
-  'package-lock.json', 'node_modules'
-]);
-
-function isReserved(name) {
-  if (RESERVED.has(name)) return true;
-  if (name.startsWith('.')) return true;
-  if (name.endsWith('.md') && name !== 'README.md') return false;
-  return false;
+/* Scans the repo root for logo, store badge, fonts and audio; ignores every reserved repo file name */
+const fs = require('fs'), path = require('path'), cp = require('child_process');
+const RESERVED = new Set(['index-infographic.html', 'index-podcast.html', 'render.js', 'package.json', 'package-lock.json', 'timestamps.txt', 'README.md', 'project.json', 'scenes.json',
+  'SolaimanLipi-Regular.ttf', 'SolaimanLipi-Bold.ttf']);
+const IMG = /\.(png|jpe?g|webp|svg)$/i, AUD = /\.(mp3|wav|m4a|aac)$/i, FNT = /\.(ttf|otf)$/i;
+const PREFIX = /^(tool-|common-|a-|b-|b-host-)/;
+function isReserved(n) { return RESERVED.has(n) || PREFIX.test(n) || /^video-.*\.mp4$/.test(n) || n.startsWith('.'); }
+function mime(n) { const e = path.extname(n).toLowerCase(); return { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' }[e]; }
+function cropOf(file) {
+  try {
+    const probe = JSON.parse(cp.execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height,pix_fmt', '-of', 'json', file]).toString()).streams[0];
+    if (!probe || /a/.test((probe.pix_fmt || '').replace(/yuv|rgb|gbr|p|le|be/g, '').replace(/[0-9]/g, '')) || /rgba|ya|argb|bgra|pal8/.test(probe.pix_fmt)) return { aspect: probe ? probe.height / probe.width : 0.387, crop: null };
+    const r = cp.spawnSync('ffmpeg', ['-hide_banner', '-i', file, '-vf', 'negate,cropdetect=limit=30:round=2:skip=0', '-frames:v', '2', '-f', 'null', '-'], { encoding: 'utf8' });
+    const m = [...(r.stderr || '').matchAll(/crop=(\d+):(\d+):(\d+):(\d+)/g)].pop();
+    if (!m) return { aspect: probe.height / probe.width, crop: null };
+    return { aspect: probe.height / probe.width, crop: { w: +m[1], h: +m[2], x: +m[3], y: +m[4], iw: probe.width, ih: probe.height } };
+  } catch (e) { return { aspect: 0.387, crop: null }; }
 }
-
-function scanAssets(root) {
-  const files = fs.readdirSync(root).filter(f => {
-    try {
-      return fs.statSync(path.join(root, f)).isFile() && !isReserved(f);
-    } catch (_) { return false; }
-  });
-
-  let logo = null;
-  let badge = null;
-  let audio = null;
-  const fonts = [];
-  const extras = [];
-
-  for (const f of files) {
-    const lower = f.toLowerCase();
-    const ext = path.extname(lower);
-    if (['.mp3', '.wav', '.m4a', '.aac'].includes(ext)) {
-      audio = f;
-    } else if (['.ttf', '.otf', '.woff', '.woff2'].includes(ext)) {
-      fonts.push(f);
-    } else if (lower.includes('badge') || lower.includes('google-play') || lower.includes('app-store') || lower.includes('play-store')) {
-      badge = f;
-    } else if (lower.includes('logo') || lower === 'logo.png' || lower === 'logo.jpg' || lower === 'logo.webp' || lower === 'logo.svg') {
-      logo = f;
-    } else if (['.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'].includes(ext)) {
-      if (!logo && (lower.includes('logo') || lower.includes('icon'))) logo = f;
-      else extras.push(f);
-    }
-  }
-
-  // Prefer explicit logo.png if present
-  if (files.includes('logo.png')) logo = 'logo.png';
-  if (files.includes('google-play-badge.png')) badge = 'google-play-badge.png';
-
-  return { logo, badge, audio, fonts, extras, all: files };
+function scan(root = __dirname) {
+  const files = fs.readdirSync(root).filter(n => fs.statSync(path.join(root, n)).isFile() && !isReserved(n));
+  const images = files.filter(n => IMG.test(n)), audio = files.filter(n => AUD.test(n)).sort(), fonts = files.filter(n => FNT.test(n)).sort();
+  const isBadge = n => /(google|play-?store|app-?store|apple|badge|store)/i.test(n);
+  const badge = images.find(isBadge) || null;
+  const logo = images.find(n => /logo/i.test(n) && n !== badge) || images.find(n => n !== badge) || null;
+  const r = { root, logo, badge, audio: audio[0] || null, fonts, extraImages: images.filter(n => n !== logo && n !== badge), logoData: null, badgeCrop: null, badgeAspect: null };
+  if (logo) r.logoData = 'data:' + mime(logo) + ';base64,' + fs.readFileSync(path.join(root, logo)).toString('base64');
+  if (badge) { const c = cropOf(path.join(root, badge)); r.badgeCrop = c.crop; r.badgeAspect = c.aspect; }
+  return r;
 }
-
-function loadLogoDataUrl(root, logoFile) {
-  if (!logoFile) return null;
-  const p = path.join(root, logoFile);
-  if (!fs.existsSync(p)) return null;
-  const buf = fs.readFileSync(p);
-  const ext = path.extname(logoFile).toLowerCase().replace('.', '');
-  const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-  return `data:${mime};base64,${buf.toString('base64')}`;
-}
-
-module.exports = { scanAssets, loadLogoDataUrl, RESERVED };
+module.exports = { scan, isReserved, RESERVED };

@@ -1,1 +1,3 @@
-'use strict'; (function(g){ g.PV = g.PV || {}; })(typeof window!=='undefined'?window:global);
+/* Theme A: infographic, vertical 1080x1920 */
+#stage{width:1080px;height:1920px}
+#vis{position:absolute;left:60px;top:470px;width:960px;height:740px}

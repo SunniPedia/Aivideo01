@@ -1,17 +1,8 @@
 {
-  "name": "universal-video-repo",
+  "name": "universal-video-renderer",
   "version": "1.0.0",
-  "description": "Timed promo/explainer video renderer from HTML+CSS+JS+SVG using Playwright + FFmpeg in GitHub Actions",
-  "main": "render.js",
-  "scripts": {
-    "render": "node render.js",
-    "check": "node tool-check-repo.js"
-  },
-  "dependencies": {
-    "playwright": "^1.48.0"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "license": "MIT"
+  "private": true,
+  "description": "Renders a timed promo video from HTML, CSS, JS and SVG with Playwright and FFmpeg",
+  "scripts": { "check": "node tool-check-repo.js", "render": "node render.js" },
+  "dependencies": { "playwright": "^1.48.0" }
 }

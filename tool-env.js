@@ -1,39 +1,16 @@
-'use strict';
-/**
- * tool-env.js – Environment parsing and defaults
- */
-const path = require('path');
-
-function parseEnv() {
-  const theme = (process.env.THEME || 'podcast').toLowerCase();
-  const isInfographic = theme === 'infographic';
-  const designW = isInfographic ? 1080 : 1920;
-  const designH = isInfographic ? 1920 : 1080;
-  const width = parseInt(process.env.WIDTH || String(designW), 10);
-  const fps = parseInt(process.env.FPS || '30', 10);
-  const out = process.env.OUT || `video-${theme}.mp4`;
-  const start = process.env.START ? parseFloat(process.env.START) : 0;
-  const end = process.env.END ? parseFloat(process.env.END) : null;
-  const audioVolume = parseFloat(process.env.AUDIO_VOLUME || '1.0');
-  const endPad = process.env.END_PAD != null ? parseFloat(process.env.END_PAD) : null;
-  const audioFadeOut = parseFloat(process.env.AUDIO_FADE_OUT || '0.5');
-
+/* Environment parsing and defaults */
+const DESIGN = { infographic: { w: 1080, h: 1920, html: 'index-infographic.html' }, podcast: { w: 1920, h: 1080, html: 'index-podcast.html' } };
+function num(v, d) { if (v === undefined || v === '') return d; const n = Number(v); return Number.isFinite(n) ? n : d; }
+function parseEnv(env = process.env) {
+  const theme = (env.THEME || 'podcast').trim();
+  if (!DESIGN[theme]) throw new Error('THEME must be infographic or podcast, got: ' + theme);
+  const d = DESIGN[theme];
+  const width = num(env.WIDTH, d.w), fps = num(env.FPS, 30);
   return {
-    theme,
-    isInfographic,
-    designW,
-    designH,
-    width,
-    height: Math.round(width * (designH / designW)),
-    fps,
-    out,
-    start,
-    end,
-    audioVolume,
-    endPad,
-    audioFadeOut,
-    scale: width / designW
+    theme, design: d, width: Math.round(width), height: Math.round(width * d.h / d.w), fps,
+    out: env.OUT || ('video-' + theme + '.mp4'), start: num(env.START, 0), end: env.END === undefined || env.END === '' ? null : num(env.END, null),
+    volume: num(env.AUDIO_VOLUME, 1.0), endPad: env.END_PAD === undefined || env.END_PAD === '' ? null : num(env.END_PAD, null),
+    fadeOut: num(env.AUDIO_FADE_OUT, 0.5)
   };
 }
-
-module.exports = { parseEnv };
+module.exports = { parseEnv, DESIGN };

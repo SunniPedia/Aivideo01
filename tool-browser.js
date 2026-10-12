@@ -1,67 +1,35 @@
-'use strict';
-/**
- * tool-browser.js – Playwright page setup, init, font wait, fit, frame loop
- */
-const fs = require('fs');
-const path = require('path');
-const { chromium } = require('playwright');
-
-async function createPage(env, htmlFile) {
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--disable-dev-shm-usage', '--no-sandbox', '--disable-gpu']
-  });
-  const context = await browser.newContext({
-    viewport: { width: env.designW, height: env.designH },
-    deviceScaleFactor: env.scale
-  });
-  const page = await context.newPage();
-  page.on('pageerror', err => console.error('[pageerror]', err.message));
-  page.on('console', msg => {
-    if (msg.type() === 'error') console.error('[console]', msg.text());
-  });
-
-  const htmlPath = path.resolve(htmlFile);
-  await page.goto('file://' + htmlPath, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  return { browser, context, page };
+/* Playwright page setup, init, font wait, fit and the frame loop */
+const path = require('path'), { pathToFileURL } = require('url');
+const fonts = require('./tool-fonts');
+async function openPage(playwright, env, root) {
+  const browser = await playwright.chromium.launch({ args: ['--allow-file-access-from-files', '--font-render-hinting=none'] });
+  const ctx = await browser.newContext({ viewport: { width: env.design.w, height: env.design.h }, deviceScaleFactor: env.width / env.design.w });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => console.error('PAGE ERROR:', e.message));
+  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('PAGE ' + m.type() + ':', m.text()); });
+  await page.goto(pathToFileURL(path.join(root, env.design.html)).href);
+  await page.waitForFunction(() => window.PV && typeof window.init === 'function');
+  return { browser, page };
 }
-
-async function runInit(page, timestampsText, opts) {
-  const total = await page.evaluate(async ({ ts, o }) => {
-    if (typeof window.init !== 'function') throw new Error('window.init not found');
-    return window.init(ts, o);
-  }, { ts: timestampsText, o: opts });
-  return total;
+async function initPage(page, raw, opts, sample, log = console.log) {
+  if (opts.fontFiles && opts.fontFiles.length) await fonts.injectUserFonts(page, opts.fontFiles);
+  const { fontFiles, ...pageOpts } = opts;
+  const total = await page.evaluate(([r, o]) => window.init(r, o), [raw, pageOpts]);
+  await page.evaluate(() => window.PV.ready);
+  await fonts.checkFonts(page, sample, log);
+  const fit = await page.evaluate(() => window.fit());
+  const info = await page.evaluate(() => ({ reason: window.PV.timeline.reason, total: window.PV.timeline.total, warnings: window.PV.warnings.slice(), source: window.PVState && window.PVState.paletteSource }));
+  return { total, fit, info };
 }
-
-async function waitFonts(page) {
-  await page.evaluate(async () => {
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-      const loaded = [];
-      for (const f of document.fonts) {
-        if (f.status === 'loaded') loaded.push(f.family);
-      }
-      console.log('[fonts] loaded:', loaded.join(', ') || '(none)');
-    }
-  });
-  // extra settle
-  await page.waitForTimeout(300);
+async function frameLoop(page, enc, o, log = console.log) {
+  const count = Math.ceil((o.end - o.start) * o.fps - 1e-9);
+  for (let n = 0; n < count; n++) {
+    const t = o.start + n / o.fps;
+    await page.evaluate(tt => window.seek(tt), t);
+    const buf = await page.screenshot({ type: 'jpeg', quality: 95 });
+    await enc.write(buf);
+    if (n % 60 === 0) log('frame ' + n + '/' + count + '  t=' + t.toFixed(2) + 's');
+  }
+  return count;
 }
-
-async function runFit(page) {
-  return page.evaluate(() => {
-    if (typeof window.fit === 'function') return window.fit();
-    return null;
-  });
-}
-
-async function seekAndScreenshot(page, t) {
-  await page.evaluate(t => {
-    if (typeof window.seek === 'function') window.seek(t);
-  }, t);
-  const buf = await page.screenshot({ type: 'jpeg', quality: 95 });
-  return buf;
-}
-
-module.exports = { createPage, runInit, waitFonts, runFit, seekAndScreenshot };
+module.exports = { openPage, initPage, frameLoop };

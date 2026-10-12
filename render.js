@@ -1,148 +1,37 @@
-'use strict';
-/**
- * render.js – thin entry: env → assets → audio → browser → frames → ffmpeg
- */
-const fs = require('fs');
-const path = require('path');
-const { parseEnv } = require('./tool-env');
-const { scanAssets, loadLogoDataUrl } = require('./tool-assets');
-const { probeDuration, analyzeEnvelope, buildMuxArgs } = require('./tool-audio');
-const { createPage, runInit, waitFonts, runFit, seekAndScreenshot } = require('./tool-browser');
-const { createEncoder } = require('./tool-encoder');
-
+/* Thin entry: THEME=infographic|podcast node render.js (see README) */
+const fs = require('fs'), path = require('path');
+const { parseEnv } = require('./tool-env'), assets = require('./tool-assets'), audio = require('./tool-audio');
+const browser = require('./tool-browser'), { startEncoder } = require('./tool-encoder');
 async function main() {
-  const env = parseEnv();
-  const root = process.cwd();
-  console.log('[render] theme=', env.theme, 'size=', env.width + 'x' + env.height, 'fps=', env.fps);
-
-  // Assets
-  const assets = scanAssets(root);
-  console.log('[assets] logo=', assets.logo, 'badge=', assets.badge, 'audio=', assets.audio, 'fonts=', assets.fonts.length);
-
-  // Project & scenes
-  let project = {};
-  if (fs.existsSync(path.join(root, 'project.json'))) {
-    project = JSON.parse(fs.readFileSync(path.join(root, 'project.json'), 'utf8'));
-  }
-  let scenes = null;
-  if (fs.existsSync(path.join(root, 'scenes.json'))) {
-    try {
-      scenes = JSON.parse(fs.readFileSync(path.join(root, 'scenes.json'), 'utf8'));
-    } catch (_) { scenes = null; }
-  }
-
-  // Timestamps
-  const tsPath = path.join(root, 'timestamps.txt');
-  if (!fs.existsSync(tsPath)) {
-    console.error('timestamps.txt missing');
-    process.exit(1);
-  }
-  const timestampsText = fs.readFileSync(tsPath, 'utf8');
-
-  // Audio
-  let audioDuration = 0;
-  let envelope = null;
-  if (assets.audio) {
-    const audioPath = path.join(root, assets.audio);
-    audioDuration = await probeDuration(audioPath);
-    console.log('[audio] duration=', audioDuration.toFixed(3), 's');
-    envelope = await analyzeEnvelope(audioPath, env.fps);
-  } else {
-    console.log('[audio] no audio file – silent video');
-  }
-
-  // END_PAD
-  let endPad = env.endPad;
-  if (endPad == null) {
-    endPad = (project.endPad != null) ? project.endPad : (assets.audio ? 2.0 : 0.5);
-  }
-
-  // HTML
-  const htmlFile = env.isInfographic ? 'index-infographic.html' : 'index-podcast.html';
-  if (!fs.existsSync(path.join(root, htmlFile))) {
-    console.error(htmlFile + ' missing');
-    process.exit(1);
-  }
-
-  const logoData = loadLogoDataUrl(root, assets.logo);
-
-  const opts = {
-    project,
-    scenes,
-    badge: assets.badge,
-    logo: assets.logo,
-    logoData,
-    audioDuration,
-    tailPad: endPad
-  };
-
-  const { browser, page } = await createPage(env, htmlFile);
-
+  const root = __dirname, env = parseEnv();
+  const playwright = require('playwright');
+  const raw = fs.readFileSync(path.join(root, 'timestamps.txt'), 'utf8');
+  const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
+  const project = read('project.json') || {}, scenes = read('scenes.json');
+  const a = assets.scan(root);
+  console.log('Assets: logo=' + a.logo + ' badge=' + a.badge + ' audio=' + a.audio + ' fonts=' + (a.fonts.join(',') || 'none'));
+  if (!a.logo) console.warn('WARNING no logo image found in the repo root');
+  const audioDuration = a.audio ? audio.probeDuration(path.join(root, a.audio)) : 0;
+  if (!a.audio) console.log('No audio file: rendering a silent video.');
+  let endPad = env.endPad; if (endPad == null && typeof project.endPad === 'number') endPad = project.endPad;
+  if (endPad == null) endPad = a.audio ? 2.0 : 0.5;
+  const opts = { project, scenes: Array.isArray(scenes) ? scenes : (scenes && scenes.scenes) || null, badge: a.badge, badgeCrop: a.badgeCrop, badgeAspect: a.badgeAspect, logo: a.logo, logoData: a.logoData,
+    audioDuration, tailPad: endPad, hasUserFont: a.fonts.length > 0, fontFiles: a.fonts };
+  const { browser: br, page } = await browser.openPage(playwright, env, root);
   try {
-    const total = await runInit(page, timestampsText, opts);
-    console.log('[init] total duration=', total.toFixed(3), 's (audio=', audioDuration.toFixed(3), '+ pad=', endPad, ')');
-
-    // WARN if mismatch
-    if (assets.audio) {
-      // last scene end is inside the page; we approximate from total
-      if (Math.abs(audioDuration - (total - endPad)) > 1.0) {
-        console.warn('[WARNING] audio length and last timestamp end differ by >1s; chosen total=', total.toFixed(3));
-      }
-    }
-
-    await waitFonts(page);
-    await runFit(page);
-
-    if (envelope) {
-      await page.evaluate(({ env, fps }) => {
-        if (typeof window.setAudio === 'function') window.setAudio(env, fps);
-      }, { env: Array.from(envelope), fps: env.fps });
-    }
-
-    const startT = env.start || 0;
-    const endT = env.end != null ? env.end : total;
-    const duration = Math.max(0.1, endT - startT);
-    const frameCount = Math.ceil(duration * env.fps);
-    console.log('[render] frames=', frameCount, 'from', startT, 'to', endT);
-
-    const audioArgs = assets.audio
-      ? buildMuxArgs({
-          audioPath: path.join(root, assets.audio),
-          start: startT,
-          duration,
-          audioDuration,
-          audioVolume: env.audioVolume,
-          audioFadeOut: env.audioFadeOut,
-          outPath: env.out
-        })
-      : { map: ['-map', '0:v'], duration: ['-t', String(duration)] };
-
-    const encoder = createEncoder({
-      width: env.width,
-      height: env.height,
-      fps: env.fps,
-      duration,
-      outPath: env.out,
-      audioArgs
-    });
-
-    for (let i = 0; i < frameCount; i++) {
-      const t = startT + i / env.fps;
-      const jpeg = await seekAndScreenshot(page, t);
-      await encoder.writeFrame(jpeg);
-      if (i % 60 === 0) {
-        console.log(`[progress] frame ${i}/${frameCount} t=${t.toFixed(2)}`);
-      }
-    }
-
-    await encoder.finish();
-    console.log('[done] wrote', env.out);
-  } finally {
-    await browser.close();
-  }
+    const sample = raw.replace(/[|\d.:]/g, ' ').slice(0, 400);
+    const { total, fit, info } = await browser.initPage(page, raw, opts, sample);
+    console.log('Duration ' + total.toFixed(3) + ' s (' + info.reason + '); palette from ' + info.source);
+    (info.warnings || []).forEach(w => console.warn(/^WARNING/.test(w) ? w : 'WARNING ' + w));
+    if (require('./tool-fonts').whichFont(root) === 'solaiman' && !fs.existsSync(path.join(root, 'SolaimanLipi-Regular.ttf'))) console.warn('WARNING main font SolaimanLipi is missing (the workflow downloads it; locally upload SolaimanLipi-Regular.ttf and SolaimanLipi-Bold.ttf to the root). Using the installed Noto fonts for now.');
+    if (a.audio) { await page.evaluate(([e, f]) => window.setAudio(e, f), [audio.analyze(path.join(root, a.audio), env.fps), env.fps]); }
+    const end = Math.min(total, env.end == null ? total : env.end), start = env.start, duration = end - start;
+    if (!(duration > 0)) throw new Error('empty render range');
+    const mux = audio.muxArgs(a.audio ? path.join(root, a.audio) : null, { start, fadeOut: env.fadeOut, volume: env.volume, audioDuration, duration });
+    const enc = startEncoder({ fps: env.fps, audio: mux, duration, out: path.resolve(root, env.out) });
+    const count = await browser.frameLoop(page, enc, { start, end, fps: env.fps });
+    await enc.finish();
+    console.log('Done: ' + env.out + ' (' + count + ' frames, ' + duration.toFixed(2) + ' s, ' + env.width + 'x' + env.height + ')');
+  } finally { await br.close(); }
 }
-
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+main().catch(e => { console.error('ERROR', e && e.stack || e); process.exit(1); });

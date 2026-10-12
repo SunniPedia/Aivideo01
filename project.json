@@ -1,52 +1,16 @@
 {
   "theme": "both",
-  "brandName": "ইসলামী বিশ্বকোষ ও আল হাদিস S2",
-  "tagline": null,
-  "language": "bn",
-  "direction": "ltr",
-  "digits": "bn",
-  "grouping": "lakh",
-  "colors": {
-    "primary": "#1a5f2a",
-    "accent": "#c9a227",
-    "highlight": "#e8c547",
-    "background": "#0d1f12",
-    "midBackground": "#14301c",
-    "darkBackground": "#0a160e",
-    "text": "#f5f0e6",
-    "cream": "#f8f4e8",
-    "mood": {
-      "respectful": "#c9a227",
-      "happy": "#e8c547",
-      "informative": "#4a9c6d",
-      "excited": "#f0d060",
-      "calm": "#7ab89a",
-      "enthusiastic": "#ffd700"
-    }
-  },
-  "fonts": {
-    "main": "SolaimanLipi",
-    "latin": "Noto Serif",
-    "files": []
-  },
-  "logo": {
-    "file": "logo.png",
-    "shape": "rounded-rect with mosque illustration",
-    "background": "white"
-  },
-  "storeTarget": "google-play",
-  "greetingText": "আসসালামু আলাইকুম",
-  "host": {
-    "skin": "medium",
-    "hair": "short-dark",
-    "cap": "no",
-    "beard": "short",
-    "glasses": "no",
-    "clothes": "plain-collared",
-    "stripes": "no",
-    "headphones": "dark",
-    "mic": "dark",
-    "faceless": false
-  },
-  "endPad": 2.0
+  "brandName": "auto",
+  "tagline": "auto",
+  "language": "auto",
+  "direction": "auto",
+  "digits": "auto",
+  "grouping": "auto",
+  "colors": "auto",
+  "fonts": { "main": "auto", "latin": "Noto Serif", "arabic": "Noto Naskh Arabic" },
+  "logo": { "file": "auto", "shape": "auto", "background": "auto" },
+  "storeTarget": "auto",
+  "greetingText": "auto",
+  "host": { "skin": "#c68a5e", "hair": "#1d1a18", "cap": "no", "beard": "no", "glasses": "no", "clothes": "auto", "stripes": "no", "headphones": "#2b2f36", "mic": "#3a3f48", "faceless": false },
+  "endPad": "auto"
 }

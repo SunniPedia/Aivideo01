@@ -1,92 +1,56 @@
-'use strict';
-(function (global) {
-  const PV = global.PV = global.PV || {};
-  let state = { scenes: [], total: 0, project: {}, opts: {}, elements: {}, brandName: '', direction: 'ltr' };
-
-  function buildDOM(opts) {
-    const stage = document.getElementById('stage');
-    stage.innerHTML = '';
-    stage.style.cssText = 'position:relative;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 80% at 50% 30%, #14301c, #0d1f12, #050a07);';
-
-    const logoCard = document.createElement('div');
-    logoCard.id = 'logo-card';
-    logoCard.style.cssText = 'position:absolute;left:50%;top:190px;width:520px;transform:translateX(-50%) scale(0.2);opacity:0;border-radius:56px;overflow:hidden;box-shadow:0 0 30px rgba(201,162,39,0.5);z-index:20;';
-    if (opts.logo) {
-      const img = document.createElement('img');
-      img.src = opts.logo;
-      img.style.cssText = 'width:100%;display:block;background:#fff;';
-      logoCard.appendChild(img);
-    }
-    stage.appendChild(logoCard);
-
-    const visual = document.createElement('div');
-    visual.id = 'visual';
-    visual.style.cssText = 'position:absolute;left:60px;top:470px;width:960px;height:740px;display:flex;align-items:center;justify-content:center;';
-    stage.appendChild(visual);
-
-    const captionPanel = document.createElement('div');
-    captionPanel.id = 'caption-panel';
-    captionPanel.style.cssText = 'position:absolute;left:50px;top:1230px;width:980px;height:540px;border-radius:64px;background:rgba(10,22,14,0.9);box-shadow:0 0 30px rgba(201,162,39,0.25);z-index:30;';
-    stage.appendChild(captionPanel);
-
-    const captionBox = document.createElement('div');
-    captionBox.id = 'caption-box';
-    captionBox.style.cssText = 'position:absolute;left:56px;top:74px;right:56px;bottom:96px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;font-size:56px;line-height:1.42;text-align:center;';
-    captionPanel.appendChild(captionBox);
-
-    const progress = document.createElement('div');
-    progress.style.cssText = 'position:absolute;left:70px;bottom:90px;width:940px;height:12px;background:rgba(255,255,255,0.1);border-radius:6px;z-index:40;';
-    const progressFill = document.createElement('div');
-    progressFill.id = 'progress-fill';
-    progressFill.style.cssText = 'height:100%;width:0%;background:linear-gradient(90deg,#c9a227,#e8c547);border-radius:6px;';
-    progress.appendChild(progressFill);
-    stage.appendChild(progress);
-
-    state.elements = { stage, logoCard, visual, captionPanel, captionBox, progressFill };
-  }
-
-  function seek(t) {
-    const scene = PV.timeline.activeScene(t, state.scenes, state.total);
-    const lv = PV.audio.level(t);
-    if (state.elements.progressFill) {
-      state.elements.progressFill.style.width = (Math.min(1, t / state.total) * 100) + '%';
-    }
-    // caption
-    const box = state.elements.captionBox;
-    if (scene) {
-      box.textContent = scene.text;
-      box.dir = state.direction;
-    } else box.textContent = '';
-    // logo
-    if (state.elements.logoCard) {
-      const show = t > 0.5;
-      state.elements.logoCard.style.opacity = show ? '1' : '0';
-      state.elements.logoCard.style.transform = show ? 'translateX(-50%) scale(1)' : 'translateX(-50%) scale(0.2)';
-    }
-    // visual
-    if (state.elements.visual && scene) {
-      state.elements.visual.innerHTML = '<div style="font-size:48px;color:var(--pv-cream);text-align:center;padding:40px;">' + scene.text + '</div>';
-    }
-  }
-
-  function fit() { return { captionSize: 56 }; }
-
-  function init(raw, opts) {
-    state.opts = opts || {};
-    state.project = (opts && opts.project) || {};
-    const detected = PV.detect.detectAll(raw, state.project);
-    state.direction = detected.direction;
-    state.brandName = detected.brandName || state.project.brandName || '';
-    state.scenes = PV.parse.parseTimestamps(raw);
-    const audioDur = (opts && opts.audioDuration) || 0;
-    const tail = (opts && opts.tailPad != null) ? opts.tailPad : 2.0;
-    state.total = PV.timeline.computeTotal(state.scenes, audioDur, tail);
-    PV.timeline.total = state.total;
-    buildDOM(opts);
-    return state.total;
-  }
-
-  global.init = init;
-  global.fit = fit;
-  global.seek = seek;
-})(typeof window !== 'undefined' ? window : global);
+/* Theme A main file: defines the contract init / fit / seek / setAudio (setAudio lives in common-audio-level.js) */
+(function () {
+  var PV = window.PV, S = {};
+  var W = 1080, H = 1920;
+  window.init = function (raw, opts) {
+    PV.warnings = []; S.opts = opts = opts || {};
+    var project = S.project = PV.detect.resolve(raw, opts.project, { badgeName: opts.badge });
+    var root = document.documentElement.style;
+    root.setProperty('--font-main', PV.detect.fontStack(project.script, !!opts.hasUserFont));
+    var parsed = PV.parse.run(raw); S.scenes = parsed.scenes;
+    var total = PV.timeline.compute(S.scenes, opts.audioDuration || 0, opts.tailPad, (opts.audioDuration || 0) > 0);
+    PV.defs.ensure();
+    var cls = S.cls = PV.classify.run(S.scenes, project, opts.scenes, !!opts.badge);
+    PV.classify.assignIcons(cls, S.scenes, project);
+    PV.scenes.setProject(project);
+    var n = S.scenes.length, brand = null, store = null;
+    cls.forEach(function (c, i) { if (c.type === 'brand' && !brand) brand = S.scenes[i]; if (c.type === 'store' && !store) store = S.scenes[i]; });
+    var grow = store ? store.start : (n >= 3 ? S.scenes[n - 2].start : (n ? S.scenes[n - 1].start : 0));
+    S.marks = { shrinkAt: brand ? brand.end : Math.min(5.6, n ? S.scenes[0].end : 5.6), growAt: grow };
+    PV.timeline.marks = S.marks;
+    var stage = document.getElementById('stage'); stage.innerHTML = ''; stage.dir = 'ltr';
+    S.bg = PV.background.build(stage, {
+      W: W, H: H, gradient: 'radial-gradient(120% 80% at 50% 30%, var(--bg-mid) 0%, var(--bg-deep) 55%, var(--bg-black) 100%)',
+      star: { size: 2200, cx: 540, cy: 768 }, progress: { left: 70, right: 70, bottom: 90, height: 12 },
+      px: function (i, t) { var x = (i * 97 + Math.sin(0.4 * t + i) * 40) % W; return (x + W) % W; },
+      py: function (i, t) { return 1920 - ((t * (20 + (i % 7) * 9) + i * 131) % 1980); }
+    });
+    var vis = document.getElementById('vis') || PV.h('div', null, stage); vis.id = 'vis'; stage.appendChild(vis); vis.innerHTML = '';
+    var area = { el: vis, w: 960, h: 740 };
+    S.vis = S.scenes.map(function (sc, i) { return PV.scenes.build(area, sc, cls[i], { theme: 'A', project: project, opts: opts, closeAlign: 'center' }); });
+    S.logo = PV.logo.build(stage, opts, PV.logoMotionA.CFG, project);
+    S.cap = PV.caption.build(stage, {
+      left: 50, top: 1230, w: 980, h: 540, radius: 64, border: 5, box: { l: 56, r: 56, t: 74, b: 96 }, line: 1.42, gapX: 18, gapY: 4, min: 40,
+      sizeFn: function (len) { return len <= 40 ? 72 : (len <= 90 ? 66 : (len <= 130 ? 56 : 50)); },
+      ornTop: { top: 18, size: 34, gap: 14 }, eq: { n: 30, h: 48, bottom: 30, inset: 90, base: 6, range: 40 }
+    }, S.scenes, project);
+    PV.ready = PV.palette.derive(opts.logoData, project.colors).then(function (r) {
+      PV.logo.layout(S.logo, project);
+      S.paletteSource = r.palette.source;
+    });
+    S.total = total;
+    return total;
+  };
+  window.fit = function () {
+    var caps = PV.caption.fit(S.cap), scales = S.vis.map(function (v) { return PV.scenes.fit(v); });
+    return { captions: caps, scenes: scales, warnings: PV.warnings.slice() };
+  };
+  window.seek = function (t) {
+    var lv = PV.audio.level(t);
+    PV.background.update(S.bg, t, lv, S.total);
+    PV.logo.apply(S.logo, PV.logoMotionA.state(t, S.marks), lv, t);
+    S.vis.forEach(function (v) { PV.scenes.update(v, t, lv); });
+    PV.caption.update(S.cap, t, lv, S.total);
+  };
+  window.PVState = S;
+})();

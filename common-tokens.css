@@ -1,41 +1,19 @@
-/* common-tokens.css – palette CSS variables, @font-face, font stacks */
-
-:root {
-  --pv-primary: #1a5f2a;
-  --pv-accent: #c9a227;
-  --pv-highlight: #e8c547;
-  --pv-bg: #0d1f12;
-  --pv-mid-bg: #14301c;
-  --pv-dark-bg: #0a160e;
-  --pv-text: #f5f0e6;
-  --pv-cream: #f8f4e8;
-  --pv-mood: #c9a227;
-  --ang: 0deg;
+/* Shared design tokens. Palette values are overwritten at runtime by common-palette.js */
+:root{
+  --bg-deep:#04210f;--bg-mid:#0a4a2a;--bg-black:#020a05;
+  --accent:#14804a;--hl:#e9c46a;--hl2:#c9973a;--cream:#fff8e6;
+  --mood:233,196,106;
+  --font-main:'Noto Serif','UserFont','SolaimanLipi','Noto Serif Bengali','Noto Sans Bengali',serif;
+  --font-ar:'Noto Naskh Arabic','Noto Sans Arabic','Amiri',serif;
+  --ic-stroke:var(--hl);--ic-fill:var(--accent);--ic-solid:var(--hl);
 }
-
-@font-face {
-  font-family: 'SolaimanLipi';
-  src: url('SolaimanLipi-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-display: block;
-}
-@font-face {
-  font-family: 'SolaimanLipi';
-  src: url('SolaimanLipi-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-display: block;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: var(--pv-dark-bg);
-  font-family: 'Noto Serif', 'SolaimanLipi', 'Noto Sans Bengali', serif;
-  color: var(--pv-text);
-  -webkit-font-smoothing: antialiased;
-}
-
-* {
-  box-sizing: border-box;
-}
+@font-face{font-family:'SolaimanLipi';src:url('SolaimanLipi-Regular.ttf');font-weight:400;font-display:block}
+@font-face{font-family:'SolaimanLipi';src:url('SolaimanLipi-Bold.ttf');font-weight:700;font-display:block}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+body{font-family:var(--font-main);color:var(--cream);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:0;top:0;overflow:hidden;transform-origin:0 0}
+.is{fill:none;stroke:var(--ic-stroke);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.if{fill:var(--ic-fill);fill-opacity:.62;stroke:var(--ic-stroke);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.ig{fill:var(--ic-solid);stroke:none}
+.abs{position:absolute}
