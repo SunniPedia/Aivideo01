@@ -15,8 +15,8 @@
     var lid = 'translate(0 220) scale(1 ' + blink.toFixed(3) + ') translate(0 -220)';
     ['host-lid-l', 'host-lid-r'].forEach(function (id) { var e = o.svg.querySelector('#' + id); tf(e, lid); });
     var wave = 0.5 + 0.5 * Math.sin(1.1 * t), ang = -(5 + 36 * sp * (0.35 + 0.65 * wave * (0.5 + 0.5 * lv)));
-    tf(o['host-arm-right'], 'rotate(' + ang.toFixed(2) + ' 670 462)');
-    tf(o['host-arm-left'], 'rotate(' + (Math.sin(0.9 * t) * 1.2).toFixed(2) + ' 250 462)');
+    tf(o['host-arm-right'], 'rotate(' + ang.toFixed(2) + ' 630 462)');
+    tf(o['host-arm-left'], 'rotate(' + (Math.sin(0.9 * t) * 1.2).toFixed(2) + ' 290 462)');
     if (o['host-waves']) { o['host-waves'].style.opacity = (0.15 + 0.85 * PV.clamp(lv * sp)).toFixed(3); }
   };
 })();

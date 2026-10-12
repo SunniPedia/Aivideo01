@@ -14,8 +14,8 @@
     [[170, 560], [215, 470]].forEach(function (p) { add(stand, 'circle', { cx: p[0], cy: p[1], r: 9, fill: GOLD, stroke: OUT, 'stroke-width': 3 }); });
     /* torso: white kurta with a short neck */
     var torso = g('host-torso');
-    add(torso, 'path', { d: 'M110 720 C110 480 250 412 460 412 C670 412 810 480 810 720Z', fill: cfg.clothes, stroke: SOFT, 'stroke-width': 4 });
-    add(torso, 'path', { d: 'M230 560 Q250 640 240 720 M690 560 Q670 640 680 720 M330 470 Q350 560 340 650', fill: 'none', stroke: SOFT, 'stroke-width': 3, opacity: 0.6, 'stroke-linecap': 'round' });
+    add(torso, 'path', { d: 'M205 720 C205 492 300 416 460 416 C620 416 715 492 715 720Z', fill: cfg.clothes, stroke: SOFT, 'stroke-width': 4 });
+    add(torso, 'path', { d: 'M278 570 Q292 645 286 720 M642 570 Q628 645 634 720 M356 490 Q364 570 360 660', fill: 'none', stroke: SOFT, 'stroke-width': 3, opacity: 0.6, 'stroke-linecap': 'round' });
     add(torso, 'rect', { x: 410, y: 352, width: 100, height: 70, rx: 22, fill: skin, stroke: OUT, 'stroke-width': 4 });
     add(torso, 'path', { d: 'M404 404 L460 484 L516 404 L496 396 L460 448 L424 396Z', fill: skin, stroke: OUT, 'stroke-width': 3, 'stroke-linejoin': 'round' });
     add(torso, 'path', { d: 'M396 394 C420 410 440 418 460 420 C480 418 500 410 524 394 L536 414 C506 432 486 440 460 442 C434 440 414 432 384 414Z', fill: cfg.clothes, stroke: SOFT, 'stroke-width': 3 });
@@ -26,13 +26,13 @@
     /* arms: pivots at the shoulders (y 462) */
     function arm(id, sx, ex, ey, hx, hy) {
       var a = g(id), d = 'M' + sx + ' 462 L' + ex + ' ' + ey + ' L' + hx + ' ' + hy;
-      add(a, 'path', { d: d, fill: 'none', stroke: SOFT, 'stroke-width': 62, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-      add(a, 'path', { d: d, fill: 'none', stroke: cfg.clothes, 'stroke-width': 54, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
-      add(a, 'circle', { cx: hx, cy: hy + 14, r: 31, fill: skin, stroke: OUT, 'stroke-width': 4 });
+      add(a, 'path', { d: d, fill: 'none', stroke: SOFT, 'stroke-width': 46, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      add(a, 'path', { d: d, fill: 'none', stroke: cfg.clothes, 'stroke-width': 40, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      add(a, 'circle', { cx: hx, cy: hy + 14, r: 26, fill: skin, stroke: OUT, 'stroke-width': 4 });
       return a;
     }
-    arm('host-arm-left', 250, 190, 630, 285, 672);
-    arm('host-arm-right', 670, 735, 630, 640, 672);
+    arm('host-arm-left', 290, 262, 632, 312, 672);
+    arm('host-arm-right', 630, 662, 632, 610, 672);
     /* head */
     var head = g('host-head');
     add(head, 'ellipse', { cx: 366, cy: 262, rx: 17, ry: 32, fill: skin, stroke: OUT, 'stroke-width': 4 });
