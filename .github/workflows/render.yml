@@ -3,107 +3,80 @@ on:
   workflow_dispatch:
     inputs:
       theme:
-        description: 'Theme'
-        required: true
-        default: 'podcast'
+        description: Theme to render
         type: choice
-        options:
-          - podcast
-          - infographic
-          - both
+        options: [podcast, infographic, both]
+        default: podcast
       quality:
-        description: 'Quality'
-        required: true
-        default: 'preview'
+        description: preview (small, fast) or full
         type: choice
-        options:
-          - preview
-          - full
+        options: [preview, full]
+        default: preview
       audio_volume:
-        description: 'Audio volume'
-        required: false
+        description: Audio volume multiplier
+        type: string
         default: '1.0'
       tail_seconds:
-        description: 'Seconds after audio ends'
-        required: false
+        description: Seconds the video continues after the audio ends
+        type: string
         default: '2'
       start:
-        description: 'Start time (test)'
-        required: false
+        description: Optional test range start (seconds)
+        type: string
         default: ''
       end:
-        description: 'End time (test)'
-        required: false
+        description: Optional test range end (seconds)
+        type: string
         default: ''
-
 jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Install system deps
+          node-version: 20
+      - name: Install system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra fonts-noto-ui-core
-          sudo fc-cache -f
-
-      - name: Download SolaimanLipi if needed
+          sudo apt-get install -y ffmpeg fonts-noto-core fonts-noto-extra
+          fc-cache -f
+      - name: Main font (SolaimanLipi, only when needed)
         run: |
-          if [ ! -f SolaimanLipi-Regular.ttf ]; then
-            curl -L -o SolaimanLipi-Regular.ttf "https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf" || echo "::warning::Could not download SolaimanLipi-Regular.ttf – upload manually"
-            curl -L -o SolaimanLipi-Bold.ttf "https://fonts.maateen.me/solaiman-lipi/solaimanlipi-bold-v1.0.ttf" || echo "::warning::Could not download SolaimanLipi-Bold.ttf – upload manually"
+          if [ "$(node tool-fonts.js --which)" = "solaiman" ] && [ ! -f SolaimanLipi-Regular.ttf ]; then
+            curl -fL -o SolaimanLipi-Regular.ttf https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf || { rm -f SolaimanLipi-Regular.ttf; echo "::warning::Could not download SolaimanLipi Regular. Upload SolaimanLipi-Regular.ttf to the repo root manually."; }
+            curl -fL -o SolaimanLipi-Bold.ttf https://fonts.maateen.me/solaiman-lipi/solaimanlipi-bold-v1.0.ttf || { rm -f SolaimanLipi-Bold.ttf; echo "::warning::Could not download SolaimanLipi Bold. Upload SolaimanLipi-Bold.ttf to the repo root manually."; }
           fi
-
-      - name: npm install
-        run: npm install
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
+      - name: Install dependencies
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
       - name: Static checks
-        run: node tool-check-repo.js || true
-
-      - name: Render podcast
-        if: ${{ github.event.inputs.theme == 'podcast' || github.event.inputs.theme == 'both' }}
+        run: node tool-check-repo.js
+      - name: Render
         env:
-          THEME: podcast
-          WIDTH: ${{ github.event.inputs.quality == 'full' && '1920' || '960' }}
-          FPS: ${{ github.event.inputs.quality == 'full' && '30' || '15' }}
-          AUDIO_VOLUME: ${{ github.event.inputs.audio_volume }}
-          END_PAD: ${{ github.event.inputs.tail_seconds }}
-          START: ${{ github.event.inputs.start }}
-          END: ${{ github.event.inputs.end }}
-          OUT: video-podcast.mp4
-        run: node render.js
-
-      - name: Render infographic
-        if: ${{ github.event.inputs.theme == 'infographic' || github.event.inputs.theme == 'both' }}
-        env:
-          THEME: infographic
-          WIDTH: ${{ github.event.inputs.quality == 'full' && '1080' || '540' }}
-          FPS: ${{ github.event.inputs.quality == 'full' && '30' || '15' }}
-          AUDIO_VOLUME: ${{ github.event.inputs.audio_volume }}
-          END_PAD: ${{ github.event.inputs.tail_seconds }}
-          START: ${{ github.event.inputs.start }}
-          END: ${{ github.event.inputs.end }}
-          OUT: video-infographic.mp4
-        run: node render.js
-
-      - name: Probe outputs
+          QUALITY: ${{ inputs.quality }}
+          THEME_IN: ${{ inputs.theme }}
+          AUDIO_VOLUME: ${{ inputs.audio_volume }}
+          END_PAD: ${{ inputs.tail_seconds }}
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+        run: |
+          if [ "$THEME_IN" = "both" ]; then THEMES="podcast infographic"; else THEMES="$THEME_IN"; fi
+          for T in $THEMES; do
+            if [ "$T" = "infographic" ]; then FULLW=1080; PREVW=540; else FULLW=1920; PREVW=960; fi
+            if [ "$QUALITY" = "full" ]; then W=$FULLW; F=30; else W=$PREVW; F=15; fi
+            THEME=$T WIDTH=$W FPS=$F node render.js
+          done
+      - name: Report durations
         run: |
           for f in video-*.mp4; do
-            if [ -f "$f" ]; then
-              echo "=== $f ==="
-              ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$f" || true
-            fi
+            echo "== $f"
+            ffprobe -v error -show_entries format=duration -of default=nw=1 "$f"
+            ffprobe -v error -select_streams a:0 -show_entries stream=duration -of default=nw=1 "$f" || true
           done
-
+          for a in *.mp3 *.wav *.m4a *.aac; do [ -f "$a" ] && { echo "audio $a"; ffprobe -v error -show_entries format=duration -of default=nw=1 "$a"; }; done || true
       - uses: actions/upload-artifact@v4
         with:
           name: video
