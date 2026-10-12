@@ -5,8 +5,9 @@
     var h = project.host || {};
     function v(k, d) { return h[k] === undefined || h[k] === 'auto' || h[k] === '' ? d : h[k]; }
     return {
-      skin: v('skin', '#c68a5e'), hair: v('hair', '#d4d4d4'), beardColor: v('beardColor', '#e8e8e8'), cap: v('cap', 'no'), beard: v('beard', 'yes'), glasses: v('glasses', 'no'),
-      age: v('age', 'old'), clothes: v('clothes', 'var(--accent)'), stripes: v('stripes', 'no'), headphones: v('headphones', '#2b2f36'), mic: v('mic', '#3a3f48'),
+      skin: v('skin', '#c98f66'), hair: v('hair', '#1a1410'), beardColor: v('beardColor', '#17110d'), cap: v('cap', 'turban'), capColor: v('capColor', '#f3f1ec'),
+      beard: v('beard', 'yes'), glasses: v('glasses', 'yes'), glassesColor: v('glassesColor', '#8a5a2b'), age: v('age', 'adult'),
+      clothes: v('clothes', '#f1ede3'), stripes: v('stripes', 'no'), headphones: v('headphones', '#1b1b1b'), accent: v('accent', '#d4a73a'), mic: v('mic', '#222222'),
       faceless: h.faceless === true || h.faceless === 'yes'
     };
   };

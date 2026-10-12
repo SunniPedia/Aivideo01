@@ -11,6 +11,6 @@
   "logo": { "file": "auto", "shape": "auto", "background": "auto" },
   "storeTarget": "auto",
   "greetingText": "auto",
-  "host": { "skin": "#c68a5e", "hair": "#d4d4d4", "beardColor": "#e8e8e8", "age": "old", "cap": "no", "beard": "yes", "glasses": "no", "clothes": "auto", "stripes": "no", "headphones": "#2b2f36", "mic": "#3a3f48", "faceless": false },
+  "host": { "skin": "#c98f66", "hair": "#1a1410", "beardColor": "#17110d", "age": "adult", "cap": "turban", "capColor": "#f3f1ec", "beard": "yes", "glasses": "yes", "glassesColor": "#8a5a2b", "clothes": "#f1ede3", "stripes": "no", "headphones": "#1b1b1b", "accent": "#d4a73a", "mic": "#222222", "faceless": false },
   "endPad": "auto"
 }
